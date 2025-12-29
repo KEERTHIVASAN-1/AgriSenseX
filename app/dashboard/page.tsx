@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useTheme } from "../contexts/ThemeContext";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     // Check if screen is mobile size
@@ -139,7 +141,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#0a0c10] via-[#111318] to-[#1a1d24]">
+    <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0]">
       {/* Top farm illustration banner */}
       <header className="w-full">
         {/* Graphic strip - responsive height */}
@@ -162,11 +164,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Farm name bar - responsive padding */}
-        <div className="flex items-center justify-between bg-[#7faf3b] px-4 sm:px-6 lg:px-8 py-3 sm:py-4 shadow-lg">
+        <div className="flex items-center justify-between bg-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 shadow-sm border-b border-[#e1e8ed]">
           <div className="flex items-center gap-2 sm:gap-3">
             {/* App logo - responsive size */}
-            <div className="flex h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 items-center justify-center rounded-lg bg-white shadow-md hover:shadow-xl transition-shadow duration-300">
-              <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-[#2f7d32] leading-tight text-center">
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#7faf3b] to-[#6a9331] shadow-md hover:shadow-lg transition-shadow duration-300">
+              <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-white leading-tight text-center">
                 Agri
                 <br />
                 SmartX
@@ -174,10 +176,10 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex flex-col">
-              <span className="text-[9px] sm:text-[10px] lg:text-xs font-semibold uppercase tracking-[0.12em] sm:tracking-[0.16em] text-lime-100">
+              <span className="text-[9px] sm:text-[10px] lg:text-xs font-semibold uppercase tracking-[0.12em] sm:tracking-[0.16em] text-[#636e72]">
                 Smart Farm
               </span>
-              <span className="text-xs sm:text-sm lg:text-base font-semibold tracking-wide text-[#1d310b]">
+              <span className="text-xs sm:text-sm lg:text-base font-semibold tracking-wide text-[#2d3436]">
                 Kandavel&apos;s Farm
               </span>
             </div>
@@ -185,20 +187,28 @@ export default function DashboardPage() {
 
           {/* Top-right controls - responsive */}
           <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Theme Toggle */}
             <button
-              className="flex h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 items-center justify-center rounded-full border border-white/40 bg-black/10 text-[10px] sm:text-xs text-white/90 hover:bg-black/20 hover:border-white/60 transition-all duration-200 active:scale-95"
+              onClick={toggleTheme}
+              className="flex h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 items-center justify-center rounded-full border border-[#e1e8ed] bg-white text-sm sm:text-base text-[#636e72] hover:bg-[#f5f9f0] hover:border-[#7faf3b] transition-all duration-200 active:scale-95 shadow-sm"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+            <button
+              className="flex h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 items-center justify-center rounded-full border border-[#e1e8ed] bg-white text-[10px] sm:text-xs text-[#636e72] hover:bg-[#f5f9f0] hover:border-[#7faf3b] transition-all duration-200 active:scale-95 shadow-sm"
               aria-label="Notifications"
             >
               <span className="relative">
-                &#128276;
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                🔔
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#ff8c42] animate-pulse"></span>
               </span>
             </button>
             <button
-              className="flex h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 items-center justify-center rounded-full border border-white/40 bg-black/10 text-sm sm:text-base text-white/90 hover:bg-black/20 hover:border-white/60 transition-all duration-200 active:scale-95"
+              className="flex h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 items-center justify-center rounded-full border border-[#e1e8ed] bg-white text-sm sm:text-base text-[#636e72] hover:bg-[#f5f9f0] hover:border-[#7faf3b] transition-all duration-200 active:scale-95 shadow-sm"
               aria-label="Menu"
             >
-              &#8942;
+              ⋮
             </button>
           </div>
         </div>
@@ -207,8 +217,8 @@ export default function DashboardPage() {
       {/* Main content - responsive padding and centering */}
       <main className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         {/* Illustration bubble - responsive sizing */}
-        <div className="mb-6 sm:mb-8 lg:mb-10 flex h-52 w-52 sm:h-60 sm:w-60 lg:h-72 lg:w-72 xl:h-80 xl:w-80 items-center justify-center rounded-full bg-gradient-to-br from-[#2a2e35] to-[#1e2127] shadow-[0_20px_60px_rgba(0,0,0,0.8)] hover:shadow-[0_25px_70px_rgba(127,175,59,0.3)] transition-all duration-500 hover:scale-105">
-          <div className="flex h-40 w-40 sm:h-44 sm:w-44 lg:h-52 lg:w-52 xl:h-60 xl:w-60 flex-col items-center justify-center rounded-3xl bg-gradient-to-br from-[#faf3ea] to-[#f3e7d9] shadow-inner">
+        <div className="mb-6 sm:mb-8 lg:mb-10 flex h-52 w-52 sm:h-60 sm:w-60 lg:h-72 lg:w-72 xl:h-80 xl:w-80 items-center justify-center rounded-full bg-white shadow-[0_20px_60px_rgba(127,175,59,0.15)] hover:shadow-[0_25px_70px_rgba(127,175,59,0.25)] transition-all duration-500 hover:scale-105 border-4 border-[#e1e8ed]">
+          <div className="flex h-40 w-40 sm:h-44 sm:w-44 lg:h-52 lg:w-52 xl:h-60 xl:w-60 flex-col items-center justify-center rounded-3xl bg-gradient-to-br from-[#ffffff] to-[#f5f9f0] shadow-inner">
             {/* Simple person + plant illustration - responsive sizing */}
             <div className="flex items-end gap-4 sm:gap-5 lg:gap-6">
               {/* Plant */}
@@ -233,9 +243,9 @@ export default function DashboardPage() {
 
         {/* Instruction text - responsive sizing */}
         <div className="max-w-xs sm:max-w-sm lg:max-w-md px-4">
-          <p className="text-center text-sm sm:text-base lg:text-lg leading-relaxed text-slate-200 font-light">
+          <p className="text-center text-sm sm:text-base lg:text-lg leading-relaxed text-[#2d3436] font-medium">
             Please press the{" "}
-            <span className="inline-flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-[#c7f15e] text-[#263210] font-bold text-base sm:text-lg shadow-md mx-1">
+            <span className="inline-flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-xl bg-gradient-to-br from-[#ffd93d] to-[#ffc107] text-white font-bold text-base sm:text-lg shadow-lg mx-1">
               +
             </span>{" "}
             button to add a device
@@ -245,14 +255,14 @@ export default function DashboardPage() {
         {/* Optional: Status cards for larger screens */}
         <div className="hidden lg:grid grid-cols-3 gap-4 mt-12 w-full max-w-2xl">
           {[
-            { icon: "🌱", label: "Devices", value: "0" },
-            { icon: "💧", label: "Active", value: "0" },
-            { icon: "📊", label: "Alerts", value: "0" }
+            { icon: "🌱", label: "Devices", value: "0", color: "from-[#7faf3b] to-[#6a9331]" },
+            { icon: "💧", label: "Active", value: "0", color: "from-[#4a90e2] to-[#357abd]" },
+            { icon: "📊", label: "Alerts", value: "0", color: "from-[#ff8c42] to-[#ff6b1a]" }
           ].map((stat, i) => (
-            <div key={i} className="bg-[#1e2229] rounded-2xl p-4 border border-[#2a2f38] hover:border-[#7faf3b] transition-all duration-300 hover:shadow-lg hover:shadow-[#7faf3b]/20">
-              <div className="text-2xl mb-2">{stat.icon}</div>
-              <div className="text-2xl font-bold text-white">{stat.value}</div>
-              <div className="text-xs text-slate-400 uppercase tracking-wider">{stat.label}</div>
+            <div key={i} className="bg-white rounded-2xl p-6 border border-[#e1e8ed] hover:border-[#7faf3b] transition-all duration-300 hover:shadow-xl hover:shadow-[#7faf3b]/10 hover:-translate-y-1">
+              <div className="text-3xl mb-3">{stat.icon}</div>
+              <div className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>{stat.value}</div>
+              <div className="text-xs text-[#636e72] uppercase tracking-wider font-semibold mt-1">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -264,15 +274,15 @@ export default function DashboardPage() {
         <div className="pointer-events-auto">
           <button
             type="button"
-            className="flex h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 items-center justify-center rounded-2xl sm:rounded-3xl lg:rounded-[1.8rem] bg-gradient-to-br from-[#8ec045] to-[#7faf3b] shadow-[0_12px_32px_rgba(0,0,0,0.8)] hover:shadow-[0_16px_40px_rgba(127,175,59,0.6)] hover:scale-110 active:scale-95 transition-all duration-300"
+            className="flex h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 items-center justify-center rounded-2xl sm:rounded-3xl lg:rounded-[1.8rem] bg-white border-2 border-[#e1e8ed] shadow-lg hover:shadow-xl hover:border-[#7faf3b] hover:scale-110 active:scale-95 transition-all duration-300"
             aria-label="Device overview"
           >
             {/* Simple grid icon - responsive sizing */}
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#1d310b]" />
-              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#1d310b]" />
-              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#1d310b]" />
-              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#1d310b]" />
+              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#7faf3b]" />
+              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#7faf3b]" />
+              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#7faf3b]" />
+              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#7faf3b]" />
             </div>
           </button>
         </div>
@@ -282,14 +292,14 @@ export default function DashboardPage() {
           <Link href="/dashboard/add-device" aria-label="Add device">
             <button
               type="button"
-              className="group relative flex h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 items-center justify-center rounded-[1.6rem] sm:rounded-[1.8rem] lg:rounded-[2.2rem] bg-gradient-to-br from-[#d4f76e] to-[#c7f15e] text-[#263210] shadow-[0_16px_36px_rgba(0,0,0,0.9)] hover:shadow-[0_20px_48px_rgba(199,241,94,0.5)] hover:scale-110 active:scale-95 transition-all duration-300"
+              className="group relative flex h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 items-center justify-center rounded-[1.6rem] sm:rounded-[1.8rem] lg:rounded-[2.2rem] bg-gradient-to-br from-[#ffd93d] to-[#ffc107] text-white shadow-[0_16px_36px_rgba(255,217,61,0.4)] hover:shadow-[0_20px_48px_rgba(255,217,61,0.6)] hover:scale-110 active:scale-95 transition-all duration-300"
             >
               <span className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-none group-hover:rotate-90 transition-transform duration-300">
                 +
               </span>
               
               {/* Pulse effect */}
-              <span className="absolute inset-0 rounded-[1.6rem] sm:rounded-[1.8rem] lg:rounded-[2.2rem] bg-[#c7f15e] animate-ping opacity-20"></span>
+              <span className="absolute inset-0 rounded-[1.6rem] sm:rounded-[1.8rem] lg:rounded-[2.2rem] bg-[#ffd93d] animate-ping opacity-20"></span>
             </button>
           </Link>
         </div>
@@ -297,8 +307,8 @@ export default function DashboardPage() {
 
       {/* Decorative gradient orbs for larger screens */}
       <div className="hidden lg:block pointer-events-none">
-        <div className="absolute top-1/4 left-10 h-64 w-64 rounded-full bg-[#7faf3b] opacity-5 blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-10 h-80 w-80 rounded-full bg-[#c7f15e] opacity-5 blur-3xl"></div>
+        <div className="absolute top-1/4 left-10 h-64 w-64 rounded-full bg-[#7faf3b] opacity-10 blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-10 h-80 w-80 rounded-full bg-[#ffd93d] opacity-10 blur-3xl"></div>
       </div>
     </div>
   );

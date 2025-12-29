@@ -1,223 +1,218 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+// import { ThermometerIcon } from "@heroicons/react/24/outline";
 
 export default function WeatherStationPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"manual" | "auto">("auto");
 
-  // Sample weather data - in a real app, this would come from an API
   const weatherData = {
-    temperature: 75, // °F
-    humidity: 65, // %
-    rainfall: 2.5, // mm
-    windspeed: 12, // km/h
-    soilMoisture: 45, // %
+    temperature: 75,
+    humidity: 65,
+    rainfall: 2.5,
+    windspeed: 12,
+    soilMoisture: 45,
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#111318] text-white">
-      {/* Header with back button */}
-      <header className="sticky top-0 z-10 bg-[#111318]/95 backdrop-blur-sm border-b border-[#2a2f3a]">
+    <div className="flex min-h-screen flex-col bg-white text-gray-900">
+      {/* Header */}
+      <header className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-green-200">
         <div className="mx-auto max-w-9xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.back()}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7faf3b] text-[#1b290b] transition-all hover:bg-[#8ac34a] hover:scale-105 active:scale-95"
                 aria-label="Go back"
+                className="group flex h-10 w-10 items-center justify-center rounded-2xl
+                          bg-gradient-to-br from-[#7faf3b] to-[#6a9331]
+                          text-white shadow-md ring-1 ring-black/5
+                          transition-all hover:shadow-lg hover:-translate-x-0.5 active:scale-95"
               >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
+                <ArrowLeftIcon className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
               </button>
+
               <div>
-                <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+                <h1 className="text-xl font-bold sm:text-2xl">
                   Weather Control
                 </h1>
-                <p className="text-xs text-gray-400 sm:text-sm">
+                <p className="text-sm text-green-700">
                   Monitor and control weather station sensors
                 </p>
               </div>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7faf3b]/20 border border-[#7faf3b]/30">
-              <span className="text-xl">🌤️</span>
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 border border-green-300">
+              🌤️
             </div>
           </div>
         </div>
       </header>
 
       <div className="mx-auto w-full max-w-9xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        {/* Manual / Auto toggle */}
-        <section className="mb-6">
-          <div className="flex w-full overflow-hidden rounded-2xl bg-[#1e2329] p-1 shadow-lg">
-            <button
-              type="button"
-              onClick={() => setMode("manual")}
-              className={`flex-1 rounded-xl py-3 text-center text-sm font-bold transition-all sm:py-4 sm:text-base ${
-                mode === "manual"
-                  ? "bg-gradient-to-r from-[#8ac34a] to-[#7faf3b] text-[#101810] shadow-lg"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              Manual
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("auto")}
-              className={`flex-1 rounded-xl py-3 text-center text-sm font-bold transition-all sm:py-4 sm:text-base ${
-                mode === "auto"
-                  ? "bg-gradient-to-r from-[#e17c5b] to-[#d2694a] text-white shadow-lg"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              Auto
-            </button>
-          </div>
-        </section>
-
-        {/* Weather Metrics Grid */}
+        {/* Metrics Grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Temperature Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#ff6b6b] to-[#ee5a6f] p-6 text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
+
+          {/* Temperature */}
+          <div className="rounded-2xl bg-white border border-green-200 p-6 shadow-sm hover:shadow-lg transition">
             <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold opacity-90">Temperature</span>
-                <div className="mt-2 text-4xl font-extrabold sm:text-5xl">
+              <div>
+                <p className="text-sm font-semibold text-green-700">Temperature</p>
+                <p className="mt-2 text-4xl font-extrabold text-gray-900">
                   {weatherData.temperature}°F
-                </div>
-                <span className="mt-1 text-sm opacity-80">
-                  {(weatherData.temperature - 32) * 5 / 9}°C
-                </span>
+                </p>
+                <p className="mt-1 text-sm text-green-600">
+                  {((weatherData.temperature - 32) * 5/9).toFixed(1)}°C
+                </p>
               </div>
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                <span className="text-4xl">🌡️</span>
+
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 border border-green-200">
+                <img
+                  src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021601/thermometer_g3cmqb.png"
+                  alt="Humidity Icon"
+                  width={40}
+                  height={40}
+                  className="opacity-90 object-contain"
+                />
               </div>
             </div>
           </div>
 
-          {/* Humidity Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#4ecdc4] to-[#44a08d] p-6 text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
+          {/* Humidity */}
+          <div className="rounded-2xl bg-white border border-green-200 p-6 shadow-sm hover:shadow-lg transition">
             <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold opacity-90">Humidity</span>
-                <div className="mt-2 text-4xl font-extrabold sm:text-5xl">
+              <div>
+                <p className="text-sm font-semibold text-green-700">Humidity</p>
+                <p className="mt-2 text-4xl font-extrabold">
                   {weatherData.humidity}%
-                </div>
-                <span className="mt-1 text-xs opacity-80">
-                  {weatherData.humidity < 40 ? "Low" : weatherData.humidity < 70 ? "Normal" : "High"}
-                </span>
+                </p>
+                <p className="mt-1 text-sm text-green-600">
+                  {weatherData.humidity < 40
+                    ? "Low"
+                    : weatherData.humidity < 70
+                    ? "Normal"
+                    : "High"}
+                </p>
               </div>
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                <span className="text-4xl">💧</span>
+
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 border border-green-200">
+                <img
+                  src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021342/icons8-humidity-50_jog7uo.png"
+                  alt="Humidity Icon"
+                  width={40}
+                  height={40}
+                  className="opacity-90 object-contain"
+                />
               </div>
             </div>
           </div>
 
-          {/* Rainfall Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#667eea] to-[#764ba2] p-6 text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
+          {/* Rainfall */}
+          <div className="rounded-2xl bg-white border border-green-200 p-6 shadow-sm hover:shadow-lg transition">
             <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold opacity-90">Rainfall</span>
-                <div className="mt-2 text-4xl font-extrabold sm:text-5xl">
+              <div>
+                <p className="text-sm font-semibold text-green-700">Rainfall</p>
+                <p className="mt-2 text-4xl font-extrabold">
                   {weatherData.rainfall}mm
-                </div>
-                <span className="mt-1 text-xs opacity-80">Last 24 hours</span>
+                </p>
+                <p className="mt-1 text-sm text-green-600">Last 24 hours</p>
               </div>
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                <span className="text-4xl">🌧️</span>
+
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 border border-green-200">
+                <img
+                  src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021689/icons8-rain-cloud-50_jx8pnw.png"
+                  alt="Humidity Icon"
+                  width={40}
+                  height={40}
+                  className="opacity-90 object-contain"
+                />
               </div>
             </div>
           </div>
 
-          {/* Wind Speed Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#f093fb] to-[#f5576c] p-6 text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
+          {/* Wind Speed */}
+          <div className="rounded-2xl bg-white border border-green-200 p-6 shadow-sm hover:shadow-lg transition">
             <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold opacity-90">Wind Speed</span>
-                <div className="mt-2 text-4xl font-extrabold sm:text-5xl">
+              <div>
+                <p className="text-sm font-semibold text-green-700">Wind Speed</p>
+                <p className="mt-2 text-4xl font-extrabold">
                   {weatherData.windspeed}
-                </div>
-                <span className="mt-1 text-xs opacity-80">km/h</span>
+                </p>
+                <p className="mt-1 text-sm text-green-600">km/h</p>
               </div>
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                <span className="text-4xl">💨</span>
+
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 border border-green-200">
+                <img
+                  src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021750/icons8-wind-50_wc12ep.png"
+                  width={40}
+                  height={40}
+                  className="opacity-90 object-contain"
+                />
               </div>
             </div>
           </div>
 
-          {/* Soil Moisture Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#fa709a] to-[#fee140] p-6 text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
+          {/* Soil Moisture */}
+          <div className="rounded-2xl bg-white border border-green-200 p-6 shadow-sm hover:shadow-lg transition">
             <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold opacity-90">Soil Moisture</span>
-                <div className="mt-2 text-4xl font-extrabold sm:text-5xl">
+              <div>
+                <p className="text-sm font-semibold text-green-700">Soil Moisture</p>
+                <p className="mt-2 text-4xl font-extrabold">
                   {weatherData.soilMoisture}%
-                </div>
-                <span className="mt-1 text-xs opacity-80">
-                  {weatherData.soilMoisture < 30 ? "Dry" : weatherData.soilMoisture < 60 ? "Optimal" : "Wet"}
-                </span>
+                </p>
+                <p className="mt-1 text-sm text-green-600">
+                  {weatherData.soilMoisture < 30
+                    ? "Dry"
+                    : weatherData.soilMoisture < 60
+                    ? "Optimal"
+                    : "Wet"}
+                </p>
               </div>
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                <span className="text-4xl">🌱</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Status Card */}
-          <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#30cfd0] to-[#330867] p-6 text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold opacity-90">Status</span>
-                <div className="mt-2 text-2xl font-extrabold sm:text-3xl">
-                  {mode === "auto" ? "Auto" : "Manual"}
-                </div>
-                <span className="mt-1 text-xs opacity-80">
-                  {mode === "auto" ? "Automated monitoring" : "Manual control"}
-                </span>
-              </div>
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                <span className="text-4xl">📊</span>
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 border border-green-200">
+                <img
+                  src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021821/icons8-soil-50_ruocgd.png"
+                  alt="Humidity Icon"
+                  width={40}
+                  height={40}
+                  className="opacity-90 object-contain"
+                />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Additional Info Section */}
-        <div className="mt-6 rounded-2xl bg-[#1e2329] p-6 shadow-lg">
-          <h2 className="mb-4 text-lg font-bold text-gray-200 sm:text-xl">
+        {/* Info Section */}
+        <div className="mt-6 rounded-2xl bg-green-50 border border-green-200 p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-bold text-green-800">
             Weather Station Information
           </h2>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl bg-[#2a2f3a] p-4">
-              <div className="text-sm text-gray-400">Last Update</div>
-              <div className="mt-1 text-base font-semibold text-white">
+
+            <div className="rounded-xl bg-white border border-green-200 p-4">
+              <p className="text-sm text-green-700">Last Update</p>
+              <p className="mt-1 font-semibold">
                 {new Date().toLocaleTimeString()}
-              </div>
+              </p>
             </div>
-            <div className="rounded-xl bg-[#2a2f3a] p-4">
-              <div className="text-sm text-gray-400">Station ID</div>
-              <div className="mt-1 text-base font-semibold text-white">WS-001</div>
+
+            <div className="rounded-xl bg-white border border-green-200 p-4">
+              <p className="text-sm text-green-700">Station ID</p>
+              <p className="mt-1 font-semibold">WS-001</p>
             </div>
-            <div className="rounded-xl bg-[#2a2f3a] p-4">
-              <div className="text-sm text-gray-400">Location</div>
-              <div className="mt-1 text-base font-semibold text-white">Field A</div>
+
+            <div className="rounded-xl bg-white border border-green-200 p-4">
+              <p className="text-sm text-green-700">Location</p>
+              <p className="mt-1 font-semibold">Field A</p>
             </div>
-            <div className="rounded-xl bg-[#2a2f3a] p-4">
-              <div className="text-sm text-gray-400">Battery</div>
-              <div className="mt-1 text-base font-semibold text-green-400">85%</div>
+
+            <div className="rounded-xl bg-white border border-green-200 p-4">
+              <p className="text-sm text-green-700">Battery</p>
+              <p className="mt-1 font-semibold text-green-600">85%</p>
             </div>
+
           </div>
         </div>
       </div>
