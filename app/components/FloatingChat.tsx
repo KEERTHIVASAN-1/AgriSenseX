@@ -5,9 +5,10 @@ import { useState, useRef, useEffect } from "react";
 export default function FloatingChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{ id: number; text: string; sender: "user" | "bot" }>>([
-    { id: 1, text: "Hello! How can I help you with your farm management today?", sender: "bot" },
+    { id: 1, text: "Hello! I'm your Farm Assistant. How can I help you with your farm management today?", sender: "bot" },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -21,25 +22,66 @@ export default function FloatingChat() {
     }
   }, [messages, isOpen]);
 
-  const handleSend = () => {
-    if (inputValue.trim()) {
-      const newMessage = {
+  const handleSend = async () => {
+    if (inputValue.trim() && !isLoading) {
+      const userMessageText = inputValue.trim();
+      const userMessage = {
         id: messages.length + 1,
-        text: inputValue,
+        text: userMessageText,
         sender: "user" as const,
       };
-      setMessages([...messages, newMessage]);
+      
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
       setInputValue("");
+      setIsLoading(true);
 
-      // Simulate bot response
-      setTimeout(() => {
+      try {
+        // Prepare conversation history (excluding the initial greeting)
+        const conversationHistory = updatedMessages
+          .filter(msg => msg.id !== 1) // Exclude initial greeting
+          .map(msg => ({
+            sender: msg.sender,
+            text: msg.text,
+          }));
+
+        // Call Gemini API
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: userMessageText,
+            conversationHistory: conversationHistory,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to get response");
+        }
+
+        const data = await response.json();
+        
         const botResponse = {
-          id: messages.length + 2,
-          text: "Thank you for your message. I'm here to help with your farm management needs!",
+          id: updatedMessages.length + 1,
+          text: data.message,
           sender: "bot" as const,
         };
+        
         setMessages((prev) => [...prev, botResponse]);
-      }, 1000);
+      } catch (error: any) {
+        console.error("Chat error:", error);
+        const errorMessage = {
+          id: updatedMessages.length + 1,
+          text: error.message || "Sorry, I'm having trouble connecting right now. Please try again later.",
+          sender: "bot" as const,
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -143,6 +185,20 @@ export default function FloatingChat() {
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start mb-4">
+                  <div className="max-w-[75%] sm:max-w-[60%] rounded-2xl px-4 py-3 sm:px-5 sm:py-4 bg-white text-[#2d3436] border border-[#e1e8ed] shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-[#7faf3b] rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                        <div className="w-2 h-2 bg-[#7faf3b] rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                        <div className="w-2 h-2 bg-[#7faf3b] rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                      </div>
+                      <span className="text-sm text-gray-500">Farm Assistant is typing...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
           </div>
@@ -161,7 +217,7 @@ export default function FloatingChat() {
                 />
                 <button
                   onClick={handleSend}
-                  disabled={!inputValue.trim()}
+                  disabled={!inputValue.trim() || isLoading}
                   className="h-[50px] w-[50px] sm:h-14 sm:w-14 rounded-xl bg-gradient-to-r from-[#7faf3b] to-[#6a9331] text-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
                   aria-label="Send message"
                 >
