@@ -8,7 +8,7 @@ export default function AddDevicePage() {
   const router = useRouter();
   const [selectedDevices, setSelectedDevices] = useState(new Set());
 
-  const toggleDevice = (label) => {
+  const toggleDevice = (label: string) => {
     setSelectedDevices(prev => {
       const newSet = new Set(prev);
       if (newSet.has(label)) {
@@ -29,9 +29,9 @@ export default function AddDevicePage() {
       gradient: "from-blue-400 to-blue-600"
     },
     { 
-      label: "Water Monitoring", 
+      label: "Drone Monitoring", 
       icon: "💧",
-      href:"/dashboard/water-control",
+      href:"/dashboard/drone-monitoring",
       description: "Track water levels and usage",
       gradient: "from-cyan-400 to-cyan-600"
     },
@@ -147,7 +147,7 @@ export default function AddDevicePage() {
               const cardProps = item.href ? { href: item.href } : {};
 
               return (
-                <CardWrapper key={item.label} {...cardProps}>
+                <CardWrapper key={item.label} {...(cardProps as any)}>
                   <button
                     type="button"
                     onClick={() => !item.href && toggleDevice(item.label)}
