@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
+// import { ArrowRightIcon } from "@heroicons/react/24/solid";
+// import { FaArrowRight } from "react-icons/fa";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -146,21 +148,7 @@ export default function DashboardPage() {
       <header className="w-full">
         {/* Graphic strip - responsive height */}
         <div className="relative h-32 sm:h-40 lg:h-48 w-full overflow-hidden bg-gradient-to-b from-[#a3c94f] via-[#7faf3b] to-[#6a9331]">
-          {/* Animated background pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px)',
-            }}></div>
-          </div>
-          
-          <div className="absolute inset-0 flex items-center justify-center opacity-80">
-            {/* Simple farm-style shapes - responsive sizes */}
-            <div className="flex items-end gap-3 sm:gap-4 lg:gap-6 text-[#1f2c10]">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg bg-lime-200 shadow-lg transform hover:scale-110 transition-transform duration-300" />
-              <div className="h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-lg bg-lime-100 shadow-lg transform hover:scale-110 transition-transform duration-300" />
-              <div className="h-14 w-16 sm:h-16 sm:w-20 lg:h-20 lg:w-24 rounded-lg bg-lime-300 shadow-lg transform hover:scale-110 transition-transform duration-300" />
-            </div>
-          </div>
+          <img src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767080549/landscape_zlgmew.jpg" alt="Farm Background" className="w-full h-full object-cover" />
         </div>
 
         {/* Farm name bar - responsive padding */}
@@ -218,8 +206,8 @@ export default function DashboardPage() {
       <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto">
           {/* Page Title */}
-          <div className="mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#2d3436] mb-2">
+          <div className="mb-5">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#2d3436] mb-1">
               Device Management
             </h2>
             <p className="text-[#636e72]">
@@ -232,43 +220,23 @@ export default function DashboardPage() {
             {[
               { 
                 label: "Motor Control", 
-                icon: "⚙️", 
+                icon: "https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767081937/icons8-motor-64_a4giuq.png", 
                 href: "/dashboard/motor-control",
-                description: "Control and monitor water pumps",
-                gradient: "from-blue-400 to-blue-600",
-                bgGradient: "from-blue-50 to-blue-100",
-                textColor: "text-blue-900",
-                descColor: "text-blue-700"
-              },
-              { 
-                label: "Drone Monitoring", 
-                icon: "🚁",
-                href: "/dashboard/drone-monitoring",
-                description: "Real-time field analysis and monitoring",
-                gradient: "from-cyan-400 to-cyan-600",
-                bgGradient: "from-cyan-50 to-sky-100",
-                textColor: "text-cyan-900",
-                descColor: "text-cyan-700"
               },
               { 
                 label: "Weather Station", 
-                icon: "🌤️",
+                icon: "https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767083291/icons8-rain-cloud-48_splxof.png",
                 href: "/dashboard/weather-station",
-                description: "Real-time weather data",
-                gradient: "from-amber-400 to-amber-600",
-                bgGradient: "from-amber-50 to-yellow-100",
-                textColor: "text-amber-900",
-                descColor: "text-amber-700"
               },
               { 
                 label: "Fertigation Mode", 
-                icon: "🧪",
+                icon: "https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767083345/icons8-solid-fertilizer-48_rb1fk0.png",
                 href: "/dashboard/fertigation",
-                description: "Fertilizer injection control",
-                gradient: "from-green-400 to-green-600",
-                bgGradient: "from-green-50 to-emerald-100",
-                textColor: "text-green-900",
-                descColor: "text-green-700"
+              },
+              { 
+                label: "Drone Monitoring", 
+                icon: "https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767083154/icons8-drone-64_czua9t.png",
+                href: "/dashboard/drone-monitoring",
               },
             ].map((device) => {
               const CardWrapper = device.href ? Link : 'div';
@@ -276,32 +244,22 @@ export default function DashboardPage() {
 
               return (
                 <CardWrapper key={device.label} {...(cardProps as any)}>
-                  <div className={`group relative w-full flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br ${device.bgGradient} border border-white/50 shadow-sm hover:shadow-xl hover:border-white transition-all duration-300 hover:-translate-y-1 cursor-pointer`}>
-                    {/* Icon background glow */}
-                    <div className={`absolute top-0 right-0 h-24 w-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${device.gradient} transition-opacity duration-300 group-hover:opacity-30`}></div>
-                    
-                    {/* Icon */}
-                    <div className="absolute top-4 right-4">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${device.gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <span className="text-2xl">{device.icon}</span>
+                  <div className="group relative w-full flex flex-col overflow-hidden rounded-2xl bg-white border border-white/50 shadow-sm hover:shadow-xl hover:border-white transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                    <div className="flex justify-between items-center pr-3 pl-3">
+                      <div className="flex gap-2 relative p-3">
+                        {/* Label */}
+                        <img src={device.icon} alt={device.label} className="w-10 h-10 object-contain" />
+                        <h3 className="flex items-center text-lg font-bold">
+                          {device.label}
+                        </h3>
+                      </div>
+                      <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6 text-black">
+                          <path fillRule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clipRule="evenodd" />
+                        </svg>
                       </div>
                     </div>
-                    
-                    <div className="flex flex-col relative p-6 pt-16">
-                      {/* Label */}
-                      <h3 className={`text-lg font-bold ${device.textColor} mb-2`}>
-                        {device.label}
-                      </h3>
 
-                      {/* Description */}
-                      <p className={`text-sm ${device.descColor} mb-4`}>
-                        {device.description}
-                      </p>
-                    </div>
-
-                    {/* Bottom accent line */}
-                    <div className={`h-1 w-full bg-gradient-to-r ${device.gradient} opacity-100`}>
-                    </div>
                   </div>
                 </CardWrapper>
               );
