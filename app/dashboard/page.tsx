@@ -215,101 +215,100 @@ export default function DashboardPage() {
       </header>
 
       {/* Main content - responsive padding and centering */}
-      <main className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-        {/* Illustration bubble - responsive sizing */}
-        <div className="mb-6 sm:mb-8 lg:mb-10 flex h-52 w-52 sm:h-60 sm:w-60 lg:h-72 lg:w-72 xl:h-80 xl:w-80 items-center justify-center rounded-full bg-white shadow-[0_20px_60px_rgba(127,175,59,0.15)] hover:shadow-[0_25px_70px_rgba(127,175,59,0.25)] transition-all duration-500 hover:scale-105 border-4 border-[#e1e8ed]">
-          <div className="flex h-40 w-40 sm:h-44 sm:w-44 lg:h-52 lg:w-52 xl:h-60 xl:w-60 flex-col items-center justify-center rounded-3xl bg-gradient-to-br from-[#ffffff] to-[#f5f9f0] shadow-inner">
-            {/* Simple person + plant illustration - responsive sizing */}
-            <div className="flex items-end gap-4 sm:gap-5 lg:gap-6">
-              {/* Plant */}
-              <div className="flex flex-col items-center gap-1 animate-[bounce_3s_ease-in-out_infinite]">
-                <div className="h-8 w-6 sm:h-10 sm:w-7 lg:h-12 lg:w-8 rounded-full bg-gradient-to-t from-emerald-700 to-emerald-500" />
-                <div className="flex gap-1">
-                  <div className="h-2 w-2.5 sm:h-2.5 sm:w-3 lg:h-3 lg:w-3.5 rounded-sm bg-emerald-700 shadow" />
-                  <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-3.5 lg:w-3.5 rounded-sm bg-emerald-800 shadow" />
-                </div>
-                <div className="mt-1 h-2 w-8 sm:w-9 lg:w-10 rounded-t-md bg-gradient-to-b from-amber-700 to-amber-900" />
-              </div>
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+        <div className="max-w-7xl mx-auto">
+          {/* Page Title */}
+          <div className="mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#2d3436] mb-2">
+              Device Management
+            </h2>
+            <p className="text-[#636e72]">
+              Select a device to monitor and control
+            </p>
+          </div>
 
-              {/* Person */}
-              <div className="flex flex-col items-center gap-1 animate-[bounce_3s_ease-in-out_0.5s_infinite]">
-                <div className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 rounded-full bg-gradient-to-br from-amber-200 to-amber-400 shadow-md" />
-                <div className="h-8 w-7 sm:h-10 sm:w-8 lg:h-12 lg:w-9 rounded-2xl bg-gradient-to-b from-[#ef8f77] to-[#e47a5b] shadow" />
-                <div className="h-7 w-8 sm:h-9 sm:w-10 lg:h-11 lg:w-12 rounded-t-2xl bg-gradient-to-b from-[#3a5fb8] to-[#2a4f9b] shadow" />
-              </div>
-            </div>
+          {/* Device Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-12">
+            {[
+              { 
+                label: "Motor Control", 
+                icon: "⚙️", 
+                href: "/dashboard/motor-control",
+                description: "Control and monitor water pumps",
+                gradient: "from-blue-400 to-blue-600",
+                bgGradient: "from-blue-50 to-blue-100",
+                textColor: "text-blue-900",
+                descColor: "text-blue-700"
+              },
+              { 
+                label: "Drone Monitoring", 
+                icon: "🚁",
+                href: "/dashboard/drone-monitoring",
+                description: "Real-time field analysis and monitoring",
+                gradient: "from-cyan-400 to-cyan-600",
+                bgGradient: "from-cyan-50 to-sky-100",
+                textColor: "text-cyan-900",
+                descColor: "text-cyan-700"
+              },
+              { 
+                label: "Weather Station", 
+                icon: "🌤️",
+                href: "/dashboard/weather-station",
+                description: "Real-time weather data",
+                gradient: "from-amber-400 to-amber-600",
+                bgGradient: "from-amber-50 to-yellow-100",
+                textColor: "text-amber-900",
+                descColor: "text-amber-700"
+              },
+              { 
+                label: "Fertigation Mode", 
+                icon: "🧪",
+                href: "/dashboard/fertigation",
+                description: "Fertilizer injection control",
+                gradient: "from-green-400 to-green-600",
+                bgGradient: "from-green-50 to-emerald-100",
+                textColor: "text-green-900",
+                descColor: "text-green-700"
+              },
+            ].map((device) => {
+              const CardWrapper = device.href ? Link : 'div';
+              const cardProps = device.href ? { href: device.href } : {};
+
+              return (
+                <CardWrapper key={device.label} {...(cardProps as any)}>
+                  <div className={`group relative w-full flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br ${device.bgGradient} border border-white/50 shadow-sm hover:shadow-xl hover:border-white transition-all duration-300 hover:-translate-y-1 cursor-pointer`}>
+                    {/* Icon background glow */}
+                    <div className={`absolute top-0 right-0 h-24 w-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${device.gradient} transition-opacity duration-300 group-hover:opacity-30`}></div>
+                    
+                    {/* Icon */}
+                    <div className="absolute top-4 right-4">
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${device.gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        <span className="text-2xl">{device.icon}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col relative p-6 pt-16">
+                      {/* Label */}
+                      <h3 className={`text-lg font-bold ${device.textColor} mb-2`}>
+                        {device.label}
+                      </h3>
+
+                      {/* Description */}
+                      <p className={`text-sm ${device.descColor} mb-4`}>
+                        {device.description}
+                      </p>
+                    </div>
+
+                    {/* Bottom accent line */}
+                    <div className={`h-1 w-full bg-gradient-to-r ${device.gradient} opacity-100`}>
+                    </div>
+                  </div>
+                </CardWrapper>
+              );
+            })}
           </div>
         </div>
-
-        {/* Instruction text - responsive sizing */}
-        <div className="max-w-xs sm:max-w-sm lg:max-w-md px-4">
-          <p className="text-center text-sm sm:text-base lg:text-lg leading-relaxed text-[#2d3436] font-medium">
-            Please press the{" "}
-            <span className="inline-flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-xl bg-gradient-to-br from-[#ffd93d] to-[#ffc107] text-white font-bold text-base sm:text-lg shadow-lg mx-1">
-              +
-            </span>{" "}
-            button to add a device
-          </p>
-        </div>
-
-        {/* Optional: Status cards for larger screens */}
-        <div className="hidden lg:grid grid-cols-3 gap-4 mt-12 w-full max-w-2xl">
-          {[
-            { icon: "🌱", label: "Devices", value: "0", color: "from-[#7faf3b] to-[#6a9331]" },
-            { icon: "💧", label: "Active", value: "0", color: "from-[#4a90e2] to-[#357abd]" },
-            { icon: "📊", label: "Alerts", value: "0", color: "from-[#ff8c42] to-[#ff6b1a]" }
-          ].map((stat, i) => (
-            <div key={i} className="bg-white rounded-2xl p-6 border border-[#e1e8ed] hover:border-[#7faf3b] transition-all duration-300 hover:shadow-xl hover:shadow-[#7faf3b]/10 hover:-translate-y-1">
-              <div className="text-3xl mb-3">{stat.icon}</div>
-              <div className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>{stat.value}</div>
-              <div className="text-xs text-[#636e72] uppercase tracking-wider font-semibold mt-1">{stat.label}</div>
-            </div>
-          ))}
-        </div>
       </main>
-
-      {/* Bottom floating actions - responsive positioning */}
-      <footer className="pointer-events-none fixed inset-x-0 bottom-4 sm:bottom-6 lg:bottom-8 flex items-end justify-between px-4 sm:px-6 lg:px-8 xl:px-12">
-        {/* Left rounded square button - responsive sizing */}
-        <div className="pointer-events-auto">
-          <button
-            type="button"
-            className="flex h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 items-center justify-center rounded-2xl sm:rounded-3xl lg:rounded-[1.8rem] bg-white border-2 border-[#e1e8ed] shadow-lg hover:shadow-xl hover:border-[#7faf3b] hover:scale-110 active:scale-95 transition-all duration-300"
-            aria-label="Device overview"
-          >
-            {/* Simple grid icon - responsive sizing */}
-            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#7faf3b]" />
-              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#7faf3b]" />
-              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#7faf3b]" />
-              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5 rounded-full bg-[#7faf3b]" />
-            </div>
-          </button>
-        </div>
-
-        {/* Right primary + button - responsive sizing */}
-        <div className="pointer-events-auto">
-          <Link href="/dashboard/add-device" aria-label="Add device">
-            <button
-              type="button"
-              className="group relative flex h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 items-center justify-center rounded-[1.6rem] sm:rounded-[1.8rem] lg:rounded-[2.2rem] bg-gradient-to-br from-[#ffd93d] to-[#ffc107] text-white shadow-[0_16px_36px_rgba(255,217,61,0.4)] hover:shadow-[0_20px_48px_rgba(255,217,61,0.6)] hover:scale-110 active:scale-95 transition-all duration-300"
-            >
-              <span className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-none group-hover:rotate-90 transition-transform duration-300">
-                +
-              </span>
-              
-              {/* Pulse effect */}
-              <span className="absolute inset-0 rounded-[1.6rem] sm:rounded-[1.8rem] lg:rounded-[2.2rem] bg-[#ffd93d] animate-ping opacity-20"></span>
-            </button>
-          </Link>
-        </div>
-      </footer>
-
-      {/* Decorative gradient orbs for larger screens */}
-      <div className="hidden lg:block pointer-events-none">
-        <div className="absolute top-1/4 left-10 h-64 w-64 rounded-full bg-[#7faf3b] opacity-10 blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-10 h-80 w-80 rounded-full bg-[#ffd93d] opacity-10 blur-3xl"></div>
-      </div>
     </div>
   );
 }
