@@ -48,7 +48,7 @@ export default function MotorControlPage() {
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0] text-gray-900">
 
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm">
         <div className="mx-auto max-w-9xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -82,7 +82,7 @@ export default function MotorControlPage() {
 
         {/* Phase Monitoring */}
         <section 
-          className="mb-6 rounded-2xl p-5 shadow-sm relative overflow-hidden"
+          className="mb-6 rounded-2xl p-3 shadow-sm relative overflow-hidden"
           style={{
             backgroundImage: `url(https://img.freepik.com/premium-photo/electrical-circuit-board-technology-background_1022901-71469.jpg)`,
             backgroundSize: 'cover',
@@ -189,40 +189,33 @@ export default function MotorControlPage() {
           <div className="mt-4 pt-4 border-t border-white/20 relative z-10">
             <div className="grid sm:grid-cols-2 gap-4">
               <div 
-                className="relative rounded-lg p-3 border border-green-200 overflow-hidden"
+                className="relative rounded-lg p-3 border border-green-200 bg-white/20 backdrop-blur-md"
                 style={{
-                  backgroundImage: `url(https://tse2.mm.bing.net/th/id/OIP.cIfgTJmVB7ABkuj85ENbYwHaEq?pid=Api&P=0&h=180)`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat'
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
                 }}
               >
-                {/* Overlay for better text readability */}
-                <div className="absolute inset-0 bg-black/40"></div>
+                <div className="flex items-center justify-between">
+                  <label className="text-[13px] font-bold text-green-900 uppercase block mb-1">
+                    Voltage & Current Threshold
+                  </label>
+                  <button
+                    onClick={() => router.push("/dashboard/motor-control/thresholds")}
+                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 transition-colors shadow-md"
+                    aria-label="Edit thresholds"
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                  </button>
+                </div>
                 
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[13px] font-bold text-white uppercase block mb-1 drop-shadow-md">
-                      Voltage & Current Threshold
-                    </label>
-                    <button
-                      onClick={() => router.push("/dashboard/motor-control/thresholds")}
-                      className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/90 hover:bg-white text-green-700 transition-colors shadow-md"
-                      aria-label="Edit thresholds"
-                    >
-                      <PencilIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <p className="text-lg font-mono font-bold text-white drop-shadow-md">
-                      {voltage}V
-                    </p>
-                    <span className="text-white/80">|</span>
-                    <p className="text-lg font-mono font-bold text-white drop-shadow-md">
-                      {current}A
-                    </p>
-                  </div>
+                <div className="flex items-center gap-4">
+                  <p className="text-lg font-mono font-bold text-gray-900">
+                    {voltage}V
+                  </p>
+                  <span className="text-gray-600">|</span>
+                  <p className="text-lg font-mono font-bold text-gray-900">
+                    {current}A
+                  </p>
                 </div>
               </div>
             </div>
@@ -240,9 +233,9 @@ export default function MotorControlPage() {
             >
               <div className="flex flex-col items-center gap-4">
                 <div className="flex h-24 w-24 items-center justify-center 
-                  rounded-2xl bg-gradient-to-br from-green-100 to-green-200
+                  rounded-2xl 
                   shadow-md transition-transform group-hover:scale-110">
-                  <img src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021968/icons8-motor-50_ooixaf.png" alt="Motor Icon" width={50} height={50} className="opacity-90 object-contain" />
+                  <img src="https://easy-peasy.ai/cdn-cgi/image/quality=80,format=auto,width=700/https://fdczvxmwwjwpwbeeqcth.supabase.co/storage/v1/object/public/images/1f8b2cc9-c384-4a8e-8942-c925dc7081f7/317c40f6-43e2-4f2b-b9e6-7a6015371bf4.png" alt="Motor Icon" width={70} height={70} className="opacity-90 object-contain" />
                 </div>
                 <h3 className="text-xl font-bold">Motors</h3>
                 <p className="text-sm text-gray-600 text-center">

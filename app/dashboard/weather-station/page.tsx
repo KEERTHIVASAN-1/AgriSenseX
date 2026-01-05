@@ -129,20 +129,143 @@ export default function WeatherStationPage() {
               </div>
             </div>
           </div>
+          {/* Weather Metrics Card Separate*/}
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-6 mb-6">
+            {/* Temperature Card */}
+            <div 
+              className="rounded-2xl p-6 shadow-sm relative overflow-hidden min-h-[160px]"
+              style={{
+                backgroundImage: `url(https://static.vecteezy.com/system/resources/previews/017/793/388/original/funny-cartoon-face-thermometer-set-vector.jpg)`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
+              <div className="absolute inset-0 bg-black/30"></div>
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="flex items-center gap-3">
+                  {/* <img
+                    src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021601/thermometer_g3cmqb.png"
+                    alt="Temperature Icon"
+                    width={40}
+                    height={40}
+                    className="opacity-90 object-contain invert brightness-0"
+                  /> */}
+                  <p className="text-sm font-semibold text-white drop-shadow-md">Temperature</p>
+                </div>
+                <p className="text-4xl font-bold text-white drop-shadow-lg">
+                  {weatherData.temperature}°C
+                </p>
+              </div>
+            </div>
+            {/* Humidity Card */}
+            <div 
+              className="rounded-2xl p-6 shadow-sm relative overflow-hidden min-h-[160px]"
+              style={{
+                backgroundImage: `url(https://img.freepik.com/premium-vector/humidity-icon-comic-style-climate-vector-cartoon-illustration-white-isolated-background-temperature-forecast-business-concept-splash-effect_157943-11242.jpg)`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
+              <div className="absolute inset-0 bg-black/30"></div>
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="flex items-center gap-3">
+                  {/* <img
+                    src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021342/icons8-humidity-50_jog7uo.png"
+                    alt="Humidity Icon"
+                    width={40}
+                    height={40}
+                    className="opacity-90 object-contain invert brightness-0"
+                  /> */}
+                  <p className="text-sm font-semibold text-white drop-shadow-md">Humidity</p>
+                </div>
+                <p className="text-4xl font-bold text-white drop-shadow-lg">
+                  {weatherData.humidity}%
+                </p>
+              </div>
+            </div>
+            {/* Rainfall Card */}
+            <div 
+              className="rounded-2xl p-6 shadow-sm relative overflow-hidden min-h-[160px]"
+              style={{
+                backgroundImage: `url(https://img.freepik.com/fotos-premium/estilo-ilustracion-vectorial-lluvia-dibujos-animados_750724-13180.jpg)`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
+              <div className="absolute inset-0 bg-black/30"></div>
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="flex items-center gap-3">
+                  {/* <img
+                    src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021689/icons8-rain-cloud-50_jx8pnw.png"
+                    alt="Rainfall Icon"
+                    width={40}
+                    height={40}
+                    className="opacity-90 object-contain invert brightness-0"
+                  /> */}
+                  <p className="text-sm font-semibold text-white drop-shadow-md">Rainfall</p>
+                </div>
+                <p className="text-4xl font-bold text-white drop-shadow-lg">
+                  {weatherData.rainfall} mm
+                </p>
+              </div>
+            </div>
+            {/* Wind Speed Card */}
+            <div 
+              className="rounded-2xl p-6 shadow-sm relative overflow-hidden min-h-[160px]"
+              style={{
+                backgroundImage: `url(https://static.vecteezy.com/system/resources/previews/028/298/977/original/kids-drawing-cartoon-illustration-wind-icon-isolated-on-white-background-vector.jpg)`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
+              <div className="absolute inset-0 bg-black/30"></div>
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="flex items-center gap-3">
+                  {/* <img
+                    src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021750/icons8-wind-50_wc12ep.png"
+                    alt="Wind Speed Icon"
+                    width={40}
+                    height={40}
+                    className="opacity-90 object-contain invert brightness-0"
+                  /> */}
+                  <p className="text-sm font-semibold text-white drop-shadow-md">Wind Speed</p>
+                </div>
+                <p className="text-4xl font-bold text-white drop-shadow-lg">
+                  {weatherData.windSpeed} km/h
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Soil Data Card */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <div 
+          className="rounded-2xl p-6 shadow-sm relative overflow-hidden"
+          style={{
+            backgroundImage: `url(https://static.vecteezy.com/system/resources/previews/000/538/975/original/vector-nature-above-and-underground.jpg)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-black/30"></div>
+          
+          <div className="relative z-10">
             <div className="flex items-center gap-2 justify-between">
-              <h2 className="text-lg font-bold text-gray-900 mb-6">Soil Data</h2>
-              <img src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021821/icons8-soil-50_ruocgd.png" alt="Soil Moisture Icon" width={32} height={32} className="opacity-90 object-contain" />
+              <h2 className="text-lg font-bold text-white mb-6 drop-shadow-md">Soil Data</h2>
+              <img src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021821/icons8-soil-50_ruocgd.png" alt="Soil Moisture Icon" width={32} height={32} className="opacity-90 object-contain invert brightness-0" />
             </div>
-            <div className="grid grid-cols-2 divide-x divide-gray-200">
+            <div className="grid grid-cols-2 divide-x divide-white/30 mb-6">
               {/* Left Panel — Moisture */}
               <div className="pr-5">
                 <div className="flex items-center gap-2 justify-between">
-                  <p className="text-sm font-semibold text-gray-700">Moisture</p>
+                  <p className="text-sm font-semibold text-white drop-shadow-md">Moisture</p>
                   <div className="flex items-center gap-3">
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-xl font-bold text-white drop-shadow-md">
                       {weatherData.soilMoisture}%
                     </p>
                   </div>
@@ -151,15 +274,16 @@ export default function WeatherStationPage() {
               {/* Right Panel — pH */}
               <div className="pl-5">
                 <div className="flex items-center gap-2 ">
-                  <p className="text-sm font-semibold text-gray-700">pH</p>
+                  <p className="text-sm font-semibold text-white drop-shadow-md">pH</p>
                   <div className="flex items-center gap-3">
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-2xl font-bold text-white drop-shadow-md">
                       {weatherData.soilPH}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
