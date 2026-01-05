@@ -103,13 +103,6 @@ export default function MotorControlPage() {
                   Click on each card to view Power and Energy
                 </p>
               </div>
-              <button
-                onClick={() => router.push("/dashboard/motor-control/thresholds")}
-                className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/90 hover:bg-white text-green-700 transition-colors shadow-md"
-                aria-label="Edit thresholds"
-              >
-                <PencilIcon className="w-4 h-4" />
-              </button>
             </div>
 
           <div className="mt-4 relative overflow-hidden rounded-xl">
