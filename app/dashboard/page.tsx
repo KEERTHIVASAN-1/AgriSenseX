@@ -123,7 +123,7 @@ export default function DashboardPage() {
               },
               { 
                 label: "Fertigation Mode", 
-                icon: "https://static.vecteezy.com/system/resources/previews/049/768/605/original/cartoon-of-cute-fertilizer-illustration-with-simple-colors-and-concept-free-vector.jpg",
+                icon: "https://static.vecteezy.com/system/resources/previews/049/768/605/original/cartoon-of-cute-fertilizer-illustration-with-simple-colors-and-concept-free-vector.jpg  ",
                 href: "/dashboard/fertigation",
               },
               { 
