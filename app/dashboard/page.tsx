@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
-// import { ArrowRightIcon } from "@heroicons/react/24/solid";
-// import { FaArrowRight } from "react-icons/fa";
 
 export default function DashboardPage() {
 
@@ -20,11 +18,6 @@ export default function DashboardPage() {
     <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0]">
       {/* Top farm illustration banner */}
       <header className="w-full">
-        {/* Graphic strip - responsive height */}
-        <div className="relative h-32 sm:h-40 lg:h-48 w-full overflow-hidden bg-gradient-to-b from-[#a3c94f] via-[#7faf3b] to-[#6a9331]">
-          <img src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767080549/landscape_zlgmew.jpg" alt="Farm Background" className="w-full h-full object-cover" />
-        </div>
-
         {/* Farm name bar - responsive padding */}
         <div className="flex items-center justify-between bg-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 shadow-sm border-b border-[#e1e8ed]">
           <div className="flex items-center gap-2 sm:gap-3">
