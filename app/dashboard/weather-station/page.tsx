@@ -129,20 +129,31 @@ export default function WeatherStationPage() {
               </div>
             </div>
           </div>
-
           {/* Soil Data Card */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <div 
+          className="rounded-2xl p-6 shadow-sm relative overflow-hidden"
+          style={{
+            backgroundImage: `url(https://static.vecteezy.com/system/resources/previews/000/538/975/original/vector-nature-above-and-underground.jpg)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-black/30"></div>
+          
+          <div className="relative z-10">
             <div className="flex items-center gap-2 justify-between">
-              <h2 className="text-lg font-bold text-gray-900 mb-6">Soil Data</h2>
-              <img src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021821/icons8-soil-50_ruocgd.png" alt="Soil Moisture Icon" width={32} height={32} className="opacity-90 object-contain" />
+              <h2 className="text-lg font-bold text-white mb-6 drop-shadow-md">Soil Data</h2>
+              <img src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021821/icons8-soil-50_ruocgd.png" alt="Soil Moisture Icon" width={32} height={32} className="opacity-90 object-contain invert brightness-0" />
             </div>
-            <div className="grid grid-cols-2 divide-x divide-gray-200">
+            <div className="grid grid-cols-2 divide-x divide-white/30 mb-6">
               {/* Left Panel — Moisture */}
               <div className="pr-5">
                 <div className="flex items-center gap-2 justify-between">
-                  <p className="text-sm font-semibold text-gray-700">Moisture</p>
+                  <p className="text-sm font-semibold text-white drop-shadow-md">Moisture</p>
                   <div className="flex items-center gap-3">
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-xl font-bold text-white drop-shadow-md">
                       {weatherData.soilMoisture}%
                     </p>
                   </div>
@@ -151,15 +162,16 @@ export default function WeatherStationPage() {
               {/* Right Panel — pH */}
               <div className="pl-5">
                 <div className="flex items-center gap-2 ">
-                  <p className="text-sm font-semibold text-gray-700">pH</p>
+                  <p className="text-sm font-semibold text-white drop-shadow-md">pH</p>
                   <div className="flex items-center gap-3">
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-2xl font-bold text-white drop-shadow-md">
                       {weatherData.soilPH}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

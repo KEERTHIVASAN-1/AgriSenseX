@@ -12,8 +12,8 @@ const ICONS8 = {
   recommend: "https://img.icons8.com/color/48/star.png",
   fertilizer: "https://img.icons8.com/color/48/test-tube.png",
   moisture: "https://img.icons8.com/color/48/water.png",
-  npk: "https://img.icons8.com/color/48/chemical-formula.png",
-  ph: "https://img.icons8.com/color/48/ph-scale.png",
+  npk: "https://img.icons8.com/external-icongeek26-outline-colour-icongeek26/64/external-chemical-medical-icongeek26-outline-colour-icongeek26.png",
+  ph: "https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-ph-meter-gardening-flaticons-lineal-color-flat-icons.png",
 };
 
 export default function FertigationPage() {
@@ -23,32 +23,31 @@ export default function FertigationPage() {
   return (
     <div className="min-h-screen bg-[#e8f5d0] pb-12">
       {/* Header */}
-      <div className="relative bg-gradient-to-b from-[#eef5df] to-[#f6f8f2] pt-6 pb-0">
-        <div className="px-4">
-          <button
-            onClick={() => router.back()}
-            className="absolute top-6 left-4 text-green-700 hover:scale-110 transition-transform duration-200"
-          >
-            <img
-              src={ICONS8.back}
-              alt="Back"
-              className="h-7 w-7 drop-shadow-sm"
-            />
-          </button>
+      <header className="sticky top-0 z-10 bg-white/90
+       backdrop-blur-sm text-black">
+        <div className="mx-auto max-w-9xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.back()}
+                aria-label="Go back"
+                className="group flex h-10 w-10 items-center justify-center rounded-2xl
+                          bg-gradient-to-br from-[#7faf3b] to-[#6a9331]
+                          text-white shadow-md ring-1 ring-black/5
+                          transition-all hover:shadow-lg hover:-translate-x-0.5 active:scale-95"
+              >
+                <ArrowLeftIcon className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
+              </button>
 
-          <h1 className="ml-10 text-xl font-semibold text-green-900">
-            Fertigation
-          </h1>
+              <div>
+                <h1 className="text-xl font-bold sm:text-2xl">
+                  Weather Control
+                </h1>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Farm Illustration – full width, no rounded corners */}
-        <div
-          className="mt-6 h-56 w-full bg-cover bg-center shadow-lg relative z-0"
-          style={{
-            backgroundImage: "url('/images/farm-bg.png')",
-          }}
-        />
-      </div>
+      </header>
 
       {/* Content – positioned below image */}
       <div className="mt-12 px-4 space-y-4 relative z-10">

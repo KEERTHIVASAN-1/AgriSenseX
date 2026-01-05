@@ -142,7 +142,7 @@ export default function MotorDetailsPage({ params }: MotorDetailsPageProps) {
                         : "bg-gradient-to-br from-red-100 to-red-200"
                     }`}>
                       <img 
-                        src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767162661/water-pump-motor-vector_1049408-13189_huw6tk.png" 
+                        src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021968/icons8-motor-50_ooixaf.png" 
                         alt="Motor Icon" 
                         width={60} 
                         height={60} 
