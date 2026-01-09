@@ -49,11 +49,11 @@ export default function ConnectDevicePage() {
         <div className="text-center py-12">
             <div className="mb-6">
                 <img
-                src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767026447/e-groots_no_bg_isnnax.png"
+                src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767936795/bfee632d-14e7-46d1-96d2-af36056d8959-removebg-preview_lhovv4.png"
                 alt="No Devices Connected"
                 width={160}
                 height={160}
-                className="mx-auto h-40 w-40 object-contain opacity-90"
+                className="mx-auto h-40 w-40 object-contain opacity-40"
                 />
             </div>
 
