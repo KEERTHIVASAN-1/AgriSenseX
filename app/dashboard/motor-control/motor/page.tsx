@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { publishMessage, subscribeToTopic } from "../../../../lib/mqttClient";
+import ModeStatus from "../../../components/ModeStatus";
 
 type MotorState = {
   isOn: boolean;
@@ -34,13 +36,82 @@ export default function MotorsPage() {
     };
   });
 
-  const toggleMotor = (name: string) => {
+  useEffect(() => {
+    const unsubscribeMotor1 = subscribeToTopic(
+      "anuja/esp32/motor/status",
+      (payload) => {
+        const isOn =
+          payload.trim().toUpperCase() === "ON" ||
+          payload.trim() === "1" ||
+          payload.trim().toLowerCase() === "true";
+
+        setMotors((prev) => {
+          const updated = {
+            ...prev,
+            "Motor 1": {
+              ...prev["Motor 1"],
+              isOn,
+            },
+          };
+          if (typeof window !== "undefined") {
+            localStorage.setItem("motors", JSON.stringify(updated));
+          }
+          return updated;
+        });
+      }
+    );
+
+    const unsubscribeMotor2 = subscribeToTopic(
+      "anuja/esp32/motor2/status",
+      (payload) => {
+        const isOn =
+          payload.trim().toUpperCase() === "ON" ||
+          payload.trim() === "1" ||
+          payload.trim().toLowerCase() === "true";
+
+        setMotors((prev) => {
+          const updated = {
+            ...prev,
+            "Motor 2": {
+              ...prev["Motor 2"],
+              isOn,
+            },
+          };
+          if (typeof window !== "undefined") {
+            localStorage.setItem("motors", JSON.stringify(updated));
+          }
+          return updated;
+        });
+      }
+    );
+
+    return () => {
+      unsubscribeMotor1();
+      unsubscribeMotor2();
+    };
+  }, []);
+
+  const toggleMotor = (name: string, index: number) => {
     setMotors((p) => {
       const updated = { ...p, [name]: { ...p[name], isOn: !p[name].isOn } };
-      // Save to localStorage
       if (typeof window !== "undefined") {
         localStorage.setItem("motors", JSON.stringify(updated));
       }
+
+      if (mode === "manual") {
+        const topic =
+          index === 0
+            ? "anuja/esp32/motor/control"
+            : index === 1
+            ? "anuja/esp32/motor2/control"
+            : null;
+
+        if (topic) {
+          const isOn = updated[name].isOn;
+          publishMessage(topic, isOn ? "ON" : "OFF");
+        }
+      }
+
       return updated;
     });
   };
@@ -82,8 +153,11 @@ export default function MotorsPage() {
                 </p>
               </div>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 border border-green-300">
-              ⚙️
+            <div className="flex items-center gap-3">
+              <ModeStatus />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 border border-green-300">
+                ⚙️
+              </div>
             </div>
           </div>
         </div>
@@ -127,7 +201,7 @@ export default function MotorsPage() {
             </span>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {["Motor 1", "Motor 2", "Motor 3", "Motor 4"].map((motor, idx) => {
+          {["Motor 1", "Motor 2", "Motor 3", "Motor 4"].map((motor, idx) => {
               const motorState = motors[motor];
               return (
                 <div
@@ -174,8 +248,8 @@ export default function MotorsPage() {
 
                     {/* Single On/Off Toggle Button */}
                     <button
-                      onClick={() => toggleMotor(motor)}
-                      className={`w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-md ${
+                    onClick={() => toggleMotor(motor, idx)}
+                    className={`w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-md ${
                         motorState.isOn
                           ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700"
                           : "bg-gradient-to-r from-gray-400 to-gray-500 text-white hover:from-gray-500 hover:to-gray-600"

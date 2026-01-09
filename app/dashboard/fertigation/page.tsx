@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import ModeStatus from "../../components/ModeStatus";
 
 // Icons8 – colorful, professional icon set
 const ICONS8 = {
@@ -45,6 +46,7 @@ export default function FertigationPage() {
                 </h1>
               </div>
             </div>
+            <ModeStatus />
           </div>
         </div>
       </header>

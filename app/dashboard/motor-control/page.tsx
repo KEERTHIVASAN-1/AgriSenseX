@@ -4,24 +4,26 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ArrowLeftIcon, PencilIcon } from "@heroicons/react/24/solid";
+import { subscribeToTopic } from "../../../lib/mqttClient";
+import ModeStatus from "../../components/ModeStatus";
 
 export default function MotorControlPage() {
   const router = useRouter();
-  const [voltage, setVoltage] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("voltageThreshold");
-      return saved ? Number(saved) : 100;
-    }
-    return 100;
-  });
-  const [current, setCurrent] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("currentThreshold");
-      return saved ? Number(saved) : 11.0;
-    }
-    return 11.0;
-  });
+  const [voltage, setVoltage] = useState(100);
+  const [current, setCurrent] = useState(11.0);
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
+  const [isModeConnected, setIsModeConnected] = useState(false);
+
+  type PhaseValues = { v: number; i: number; p: number; e: number };
+  const [phases, setPhases] = useState<{
+    p1: PhaseValues;
+    p2: PhaseValues;
+    p3: PhaseValues;
+  }>({
+    p1: { v: 0, i: 0, p: 0, e: 0 },
+    p2: { v: 0, i: 0, p: 0, e: 0 },
+    p3: { v: 0, i: 0, p: 0, e: 0 },
+  });
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -43,6 +45,56 @@ export default function MotorControlPage() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToTopic(
+      "anuja/esp32/mode/status",
+      (payload) => {
+        const trimmed = payload.trim();
+
+        if (trimmed && trimmed !== "--") {
+          setIsModeConnected(true);
+        } else {
+          setIsModeConnected(false);
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isModeConnected) {
+      return;
+    }
+
+    const unsubscribe = subscribeToTopic(
+      "anuja/esp32/pzem/energy_001",
+      (payload) => {
+        try {
+          const data = JSON.parse(payload) as {
+            p1?: PhaseValues;
+            p2?: PhaseValues;
+            p3?: PhaseValues;
+          };
+
+          setPhases((prev) => ({
+            p1: data.p1 ?? prev.p1,
+            p2: data.p2 ?? prev.p2,
+            p3: data.p3 ?? prev.p3,
+          }));
+        } catch (err) {
+          console.error("Failed to parse energy payload:", err);
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isModeConnected]);
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0] text-gray-900">
@@ -71,8 +123,11 @@ export default function MotorControlPage() {
                 </p>
               </div>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 border border-green-300">
-              ⚙️
+            <div className="flex items-center gap-3">
+              <ModeStatus />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 border border-green-300">
+                ⚙️
+              </div>
             </div>
           </div>
         </div>
@@ -113,9 +168,36 @@ export default function MotorControlPage() {
             {/* Foreground content */}
             <div className="relative p-1 mt-0 flex justify-between items-center gap-1">
                 {[
-                  { id: "L1", borderColor: "border-red-500", textColor: "text-red-600", bgColor: "bg-red-50/30", v: "239.4", a: "11.0" },
-                  { id: "L2", borderColor: "border-yellow-500", textColor: "text-yellow-600", bgColor: "bg-yellow-50/30", v: "238.5", a: "10.8" },
-                  { id: "L3", borderColor: "border-blue-500", textColor: "text-blue-600", bgColor: "bg-blue-50/30", v: "240.4", a: "12.0" },
+                  {
+                    id: "L1",
+                    borderColor: "border-red-500",
+                    textColor: "text-red-600",
+                    bgColor: "bg-red-50/30",
+                    v: phases.p1.v.toFixed(1),
+                    a: phases.p1.i.toFixed(1),
+                    p: phases.p1.p.toFixed(1),
+                    e: phases.p1.e.toFixed(3),
+                  },
+                  {
+                    id: "L2",
+                    borderColor: "border-yellow-500",
+                    textColor: "text-yellow-600",
+                    bgColor: "bg-yellow-50/30",
+                    v: phases.p2.v.toFixed(1),
+                    a: phases.p2.i.toFixed(1),
+                    p: phases.p2.p.toFixed(1),
+                    e: phases.p2.e.toFixed(3),
+                  },
+                  {
+                    id: "L3",
+                    borderColor: "border-blue-500",
+                    textColor: "text-blue-600",
+                    bgColor: "bg-blue-50/30",
+                    v: phases.p3.v.toFixed(1),
+                    a: phases.p3.i.toFixed(1),
+                    p: phases.p3.p.toFixed(1),
+                    e: phases.p3.e.toFixed(3),
+                  },
                 ].map((p) => {
                   const isFlipped = flippedCards[p.id] || false;
                   return (
@@ -163,18 +245,18 @@ export default function MotorControlPage() {
                             transform: 'rotateY(180deg)',
                           }}
                         >
-                          {/* Power (P = V × I) */}
+                          {/* Power */}
                           <div className="flex items-center justify-center gap-3">
                             <span className="text-sm sm:text-base font-mono font-bold text-gray-900 !opacity-100 whitespace-nowrap">
-                              {(parseFloat(p.v) * parseFloat(p.a)).toFixed(1)}W
+                              {p.p}W
                             </span>
                           </div>
                           {/* Divider */}
                           <div className="border-t border-gray-300 my-2"></div>
-                          {/* Energy (calculated as power × time, using a base value) */}
+                          {/* Energy */}
                           <div className="flex items-center justify-center gap-2">
                             <span className="text-sm sm:text-base font-mono font-bold text-gray-900 !opacity-100 whitespace-nowrap">
-                              {((parseFloat(p.v) * parseFloat(p.a)) * 0.1).toFixed(2)}kWh
+                              {p.e}kWh
                             </span>
                           </div>
                         </div>

@@ -1,12 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { link } from "fs";
+import { publishMessage, subscribeToTopic } from "../../lib/mqttClient";
 
 export default function ConnectDevicePage() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [, setSelectedMode] = useState<"wifi" | "gsm" | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToTopic(
+      "anuja/esp32/mode/status",
+      (payload) => {
+        const trimmed = payload.trim();
+
+        if (!trimmed) {
+          return;
+        }
+
+        if (trimmed.toUpperCase().includes("WIFI")) {
+          setSelectedMode("wifi");
+        } else if (trimmed.toUpperCase().includes("GSM")) {
+          setSelectedMode("gsm");
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -14,9 +38,12 @@ export default function ConnectDevicePage() {
 
   const handleOptionClick = (option: "wifi" | "gsm") => {
     setIsMenuOpen(false);
-    // Handle navigation or action based on option
-    console.log(`Selected: ${option}`);
-    // You can add navigation or modal opening logic here
+
+    const modePayload = option.toUpperCase() === "WIFI" ? "WIFI" : "GSM";
+    publishMessage("anuja/esp32/mqtt_mode", modePayload);
+
+    setSelectedMode(option);
+
     router.push("/dashboard");
   };
 

@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 import { ArrowLeftIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import ModeStatus from "../../components/ModeStatus";
 
 export default function DroneMonitoringPage() {
   const router = useRouter();
@@ -101,21 +102,23 @@ export default function DroneMonitoringPage() {
               </p>
             </div>
           </div>
-          {/* 3D Drone Model - Realistic */}
-          <div className="relative w-16 h-16 group/drone cursor-pointer" style={{ perspective: '1200px', perspectiveOrigin: '50% 50%' }}>
-            <div 
-              className="relative w-full h-full drone-3d-animation"
-              style={{
-                transformStyle: 'preserve-3d',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.animationPlayState = 'paused';
-                e.currentTarget.style.transform = 'rotateY(15deg) rotateX(-10deg) translateY(-4px) scale(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.animationPlayState = 'running';
-              }}
-            >
+          <div className="flex items-center gap-3">
+            <ModeStatus />
+            {/* 3D Drone Model - Realistic */}
+            <div className="relative w-16 h-16 group/drone cursor-pointer" style={{ perspective: '1200px', perspectiveOrigin: '50% 50%' }}>
+              <div 
+                className="relative w-full h-full drone-3d-animation"
+                style={{
+                  transformStyle: 'preserve-3d',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.animationPlayState = 'paused';
+                  e.currentTarget.style.transform = 'rotateY(15deg) rotateX(-10deg) translateY(-4px) scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.animationPlayState = 'running';
+                }}
+              >
               <svg
                 viewBox="0 0 140 140"
                 className="w-full h-full transition-all duration-700"
@@ -255,6 +258,7 @@ export default function DroneMonitoringPage() {
                 <circle cx="48" cy="78" r="1" fill="#a0aec0" opacity="0.6" />
                 <circle cx="92" cy="78" r="1" fill="#a0aec0" opacity="0.6" />
               </svg>
+              </div>
             </div>
           </div>
         </div>

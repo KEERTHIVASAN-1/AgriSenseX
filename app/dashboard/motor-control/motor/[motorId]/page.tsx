@@ -2,6 +2,8 @@
 
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { publishMessage, subscribeToTopic } from "../../../../../lib/mqttClient";
+import ModeStatus from "../../../../components/ModeStatus";
 
 type MotorDetailsPageProps = {
   params: Promise<{
@@ -17,33 +19,110 @@ function formatMotorLabel(motorId: string) {
   return motorId.replace(/-/g, " ");
 }
 
+function getMotorIndex(motorId: string): number | null {
+  const parts = motorId.split("-");
+  if (parts.length === 2 && parts[0].toLowerCase() === "motor") {
+    const idx = parseInt(parts[1], 10);
+    return Number.isNaN(idx) ? null : idx;
+  }
+  return null;
+}
+
 export default function MotorDetailsPage({ params }: MotorDetailsPageProps) {
   const router = useRouter();
   const { motorId } = use(params);
   const label = formatMotorLabel(motorId);
-  const [isRunning, setIsRunning] = useState(false);
-  const [onTime, setOnTime] = useState("06:00");
-  const [offTime, setOffTime] = useState("18:00");
-
-  // Load motor state from localStorage
-  useEffect(() => {
+  const motorIndex = getMotorIndex(motorId);
+  const [onTime, setOnTime] = useState(() => {
     if (typeof window !== "undefined") {
       const savedMotors = localStorage.getItem("motors");
       if (savedMotors) {
         try {
           const motors = JSON.parse(savedMotors);
           const motorKey = label; // e.g., "Motor 1"
-          if (motors[motorKey]) {
-            setOnTime(motors[motorKey].onTime || "06:00");
-            setOffTime(motors[motorKey].offTime || "18:00");
-            setIsRunning(motors[motorKey].isOn || false);
+          if (motors[motorKey] && motors[motorKey].onTime) {
+            return motors[motorKey].onTime;
           }
         } catch (e) {
           console.error("Error loading motor state:", e);
         }
       }
     }
-  }, [label]);
+    return "06:00";
+  });
+  const [offTime, setOffTime] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedMotors = localStorage.getItem("motors");
+      if (savedMotors) {
+        try {
+          const motors = JSON.parse(savedMotors);
+          const motorKey = label; // e.g., "Motor 1"
+          if (motors[motorKey] && motors[motorKey].offTime) {
+            return motors[motorKey].offTime;
+          }
+        } catch (e) {
+          console.error("Error loading motor state:", e);
+        }
+      }
+    }
+    return "18:00";
+  });
+  const [isRunning, setIsRunning] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedMotors = localStorage.getItem("motors");
+      if (savedMotors) {
+        try {
+          const motors = JSON.parse(savedMotors);
+          const motorKey = label; // e.g., "Motor 1"
+          if (motors[motorKey] && typeof motors[motorKey].isOn === "boolean") {
+            return motors[motorKey].isOn;
+          }
+        } catch (e) {
+          console.error("Error loading motor state:", e);
+        }
+      }
+    }
+    return false;
+  });
+
+  // Subscribe to MQTT status for Motor 1 and Motor 2
+  useEffect(() => {
+    if (motorIndex !== 1 && motorIndex !== 2) {
+      return;
+    }
+
+    const topic =
+      motorIndex === 1
+        ? "anuja/esp32/motor/status"
+        : "anuja/esp32/motor2/status";
+
+    const unsubscribe = subscribeToTopic(topic, (payload) => {
+      const isOn =
+        payload.trim().toUpperCase() === "ON" ||
+        payload.trim() === "1" ||
+        payload.trim().toLowerCase() === "true";
+
+      setIsRunning(isOn);
+
+      if (typeof window !== "undefined") {
+        const savedMotors = localStorage.getItem("motors");
+        const motors = savedMotors ? JSON.parse(savedMotors) : {};
+        const currentMotor = motors[label] || {};
+        // Preserve existing onTime/offTime from localStorage, or use defaults
+        motors[label] = {
+          ...currentMotor,
+          isOn,
+          onTime: currentMotor.onTime || "06:00",
+          offTime: currentMotor.offTime || "18:00",
+        };
+        localStorage.setItem("motors", JSON.stringify(motors));
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [label, motorIndex]);
 
   const updateMotorTime = (field: "onTime" | "offTime", value: string) => {
     if (field === "onTime") {
@@ -65,21 +144,32 @@ export default function MotorDetailsPage({ params }: MotorDetailsPageProps) {
     }
   };
 
-  const toggleMotor = () => {
-    const newState = !isRunning;
-    setIsRunning(newState);
+  const handlePowerChange = (desiredState: boolean) => {
+    // Update state immediately
+    setIsRunning(desiredState);
 
-    // Save to localStorage
+    // Save to localStorage immediately
     if (typeof window !== "undefined") {
       const savedMotors = localStorage.getItem("motors");
       const motors = savedMotors ? JSON.parse(savedMotors) : {};
+      const currentMotor = motors[label] || {};
+      // Preserve existing onTime/offTime from localStorage, or use current state values
       motors[label] = {
-        ...motors[label],
-        isOn: newState,
-        onTime,
-        offTime,
+        ...currentMotor,
+        isOn: desiredState,
+        onTime: currentMotor.onTime || onTime,
+        offTime: currentMotor.offTime || offTime,
       };
       localStorage.setItem("motors", JSON.stringify(motors));
+    }
+
+    // Publish to MQTT
+    if (motorIndex === 1 || motorIndex === 2) {
+      const topic =
+        motorIndex === 1
+          ? "anuja/esp32/motor/control"
+          : "anuja/esp32/motor2/control";
+      publishMessage(topic, desiredState ? "ON" : "OFF");
     }
   };
 
@@ -117,6 +207,7 @@ export default function MotorDetailsPage({ params }: MotorDetailsPageProps) {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <ModeStatus />
             <button className="flex h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 transition-all active:scale-95 text-lg sm:text-xl shadow-sm">
               ⚙️
             </button>
@@ -243,8 +334,8 @@ export default function MotorDetailsPage({ params }: MotorDetailsPageProps) {
 
                 <div className="flex flex-col gap-3 pt-4">
                   <button
-                    onClick={toggleMotor}
-                    className={`py-4 rounded-xl text-xs font-black tracking-[0.2em] transition-all border ${
+                  onClick={() => handlePowerChange(true)}
+                  className={`py-4 rounded-xl text-xs font-black tracking-[0.2em] transition-all border ${
                       isRunning
                         ? "bg-green-600 border-green-500 text-white shadow-lg"
                         : "bg-white border-gray-300 text-gray-600 hover:border-green-400 hover:text-green-600"
@@ -254,7 +345,7 @@ export default function MotorDetailsPage({ params }: MotorDetailsPageProps) {
                   </button>
 
                   <button
-                    onClick={toggleMotor}
+                    onClick={() => handlePowerChange(false)}
                     className={`py-4 rounded-xl text-xs font-black tracking-[0.2em] transition-all border ${
                       !isRunning
                         ? "bg-red-600 border-red-500 text-white shadow-lg"
