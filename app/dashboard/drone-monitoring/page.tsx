@@ -9,25 +9,23 @@ import ModeStatus from "../../components/ModeStatus";
 export default function DroneMonitoringPage() {
   const router = useRouter();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [uploadedFileType, setUploadedFileType] =
     useState<"image" | "video" | null>(null);
-
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ✅ RECOMMENDED: move image to /public/images/drone.jpg
   const droneImageUrl = "/images/drone.jpg";
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File) => {
     const validTypes = [
       "image/png",
       "image/jpeg",
       "image/webp",
+      "image/jpg",
       "video/mp4",
     ];
 
@@ -46,12 +44,42 @@ export default function DroneMonitoringPage() {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      setUploadedFile(e.target?.result as string);
+      const result = e.target?.result as string;
+      setUploadedFile(result);
       setUploadedFileType(isImage ? "image" : "video");
       setError(null);
       setAnalysisResult(null);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
   };
 
   const clearUploadedFile = () => {
@@ -61,26 +89,42 @@ export default function DroneMonitoringPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const analyzeImage = () => {
-    if (!uploadedFile) {
-      setError("Please upload a file first");
+  const analyzeImage = async () => {
+    if (!uploadedFile || uploadedFileType !== "image") {
+      setError("Please upload an image first");
       return;
     }
 
     setIsAnalyzing(true);
     setError(null);
+    setAnalysisResult(null);
 
-    setTimeout(() => {
-      setAnalysisResult(
-        [
-          "Crop Health: Good (85%)",
-          "Pest Risk: Low",
-          "Irrigation: Optimal",
-          "Growth Stage: Vegetative",
-        ].join("\n")
-      );
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: "Analyze this drone image and provide detailed insights about crop health, potential issues, and recommendations.",
+          conversationHistory: [],
+          imageBase64: uploadedFile,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to analyze image");
+      }
+
+      const data = await response.json();
+      setAnalysisResult(data.jsonData || data);
+    } catch (error: any) {
+      console.error("Analysis error:", error);
+      setError(error.message || "Sorry, I'm having trouble analyzing the image. Please try again.");
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -265,10 +309,14 @@ export default function DroneMonitoringPage() {
       </header>
 
       <main className="max-w-4xl mx-auto w-full px-4 py-8">
-        {/* Upload Card */}
+        {/* Upload Card with Drag and Drop */}
         <div className="bg-white rounded-2xl p-6 shadow border">
           <div
-            className="relative aspect-video rounded-xl overflow-hidden cursor-pointer transition-all duration-300 group"
+            className={`relative aspect-video rounded-xl overflow-hidden cursor-pointer transition-all duration-300 group border-2 ${
+              isDragging
+                ? "border-green-500 bg-green-50"
+                : "border-dashed border-gray-300"
+            }`}
             style={{
               backgroundImage: uploadedFile
                 ? `url(${uploadedFile})`
@@ -276,6 +324,9 @@ export default function DroneMonitoringPage() {
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
             onClick={() => !uploadedFile && fileInputRef.current?.click()}
           >
             {/* White Overlay - reduces opacity on hover */}
@@ -287,10 +338,14 @@ export default function DroneMonitoringPage() {
               }}
             />
             {!uploadedFile && (
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className="h-16 w-16 rounded-full bg-white border-2 border-green-600 flex items-center justify-center shadow-lg">
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                <div className="h-16 w-16 rounded-full bg-white border-2 border-green-600 flex items-center justify-center shadow-lg mb-3">
                   <PlusIcon className="h-8 w-8 text-green-600" />
                 </div>
+                <p className="text-sm text-gray-600 font-medium">
+                  {isDragging ? "Drop image here" : "Click or drag & drop to upload"}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">PNG, JPG, WEBP (max 10MB)</p>
               </div>
             )}
 
@@ -300,7 +355,7 @@ export default function DroneMonitoringPage() {
                   e.stopPropagation();
                   clearUploadedFile();
                 }}
-                className="absolute top-3 right-3 h-8 w-8 bg-white rounded-full flex items-center justify-center shadow z-20"
+                className="absolute top-3 right-3 h-8 w-8 bg-white rounded-full flex items-center justify-center shadow z-20 hover:bg-red-50 transition-colors"
               >
                 <XMarkIcon className="h-5 w-5 text-red-500" />
               </button>
@@ -309,36 +364,141 @@ export default function DroneMonitoringPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/webp,video/mp4"
+              accept="image/png,image/jpeg,image/jpg,image/webp,video/mp4"
               onChange={handleFileUpload}
               className="hidden"
             />
           </div>
         </div>
 
-        {/* Analyze Button - Below the block */}
+        {/* Analyze Button */}
         <div className="mt-8 flex justify-center">
           <button
             onClick={analyzeImage}
-            disabled={!uploadedFile || isAnalyzing}
+            disabled={!uploadedFile || uploadedFileType !== "image" || isAnalyzing}
             className="px-6 py-2 bg-green-600 text-white rounded-xl font-semibold disabled:opacity-50 transition-all hover:bg-green-700 hover:shadow-lg hover:scale-105 active:scale-95"
           >
-            {isAnalyzing ? "Analyzing..." : "Analyze Upload"}
+            {isAnalyzing ? "Analyzing..." : "Analyze Image"}
           </button>
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-600">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-center">
             {error}
           </div>
         )}
 
-        {analysisResult && (
-          <div className="mt-6 bg-white rounded-2xl p-6 shadow border">
-            <h2 className="font-bold mb-3">Analysis Result</h2>
-            <pre className="text-sm whitespace-pre-wrap">
-              {analysisResult}
-            </pre>
+        {/* Analysis Results */}
+        {analysisResult && !isAnalyzing && (
+          <div className="mt-6 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#7faf3b] to-[#6a9331] px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="font-bold text-xl text-white">Analysis Results</h2>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Predicted Disease */}
+              {analysisResult.predictedDisease && analysisResult.predictedDisease !== "None detected" && (
+                <div className="relative bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl border-2 border-red-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+                  <div className="absolute top-4 right-4">
+                    <div className="h-12 w-12 rounded-full bg-red-200/50 flex items-center justify-center">
+                      <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="pr-16">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <h3 className="font-bold text-lg text-red-800">Predicted Disease</h3>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="text-2xl font-bold text-red-900">{analysisResult.predictedDisease}</span>
+                      {analysisResult.diseaseConfidence && analysisResult.diseaseConfidence !== "N/A" && (
+                        <span className={`px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm ${
+                          analysisResult.diseaseConfidence === "High" ? "bg-red-200 text-red-900 border border-red-300" :
+                          analysisResult.diseaseConfidence === "Medium" ? "bg-orange-200 text-orange-900 border border-orange-300" :
+                          "bg-yellow-200 text-yellow-900 border border-yellow-300"
+                        }`}>
+                          {analysisResult.diseaseConfidence} Confidence
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Possible Causes */}
+              {analysisResult.possibleCauses && (
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border-2 border-orange-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-full bg-orange-200 flex items-center justify-center">
+                      <svg className="h-5 w-5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-bold text-lg text-orange-800">Possible Causes</h3>
+                  </div>
+                  {Array.isArray(analysisResult.possibleCauses) && analysisResult.possibleCauses.length > 0 ? (
+                    <ul className="space-y-3">
+                      {analysisResult.possibleCauses.map((cause: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-3 group">
+                          <div className="mt-1.5 flex-shrink-0">
+                            <div className="h-6 w-6 rounded-full bg-orange-200 flex items-center justify-center group-hover:bg-orange-300 transition-colors">
+                              <div className="h-2 w-2 rounded-full bg-orange-600"></div>
+                            </div>
+                          </div>
+                          <p className="text-gray-800 leading-relaxed flex-1 pt-0.5">{cause}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-800 leading-relaxed pl-12">{analysisResult.possibleCauses}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Prevention */}
+              {analysisResult.prevention && (
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-full bg-green-200 flex items-center justify-center">
+                      <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-bold text-lg text-green-800">Prevention Methods</h3>
+                  </div>
+                  {Array.isArray(analysisResult.prevention) && analysisResult.prevention.length > 0 ? (
+                    <ul className="space-y-3">
+                      {analysisResult.prevention.map((method: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-3 group">
+                          <div className="mt-1.5 flex-shrink-0">
+                            <div className="h-6 w-6 rounded-full bg-green-200 flex items-center justify-center group-hover:bg-green-300 transition-colors">
+                              <svg className="h-3 w-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                          <p className="text-gray-800 leading-relaxed flex-1 pt-0.5">{method}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-800 leading-relaxed pl-12">{analysisResult.prevention}</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
