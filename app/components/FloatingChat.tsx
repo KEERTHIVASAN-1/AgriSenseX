@@ -4,8 +4,8 @@ import { useState, useRef, useEffect } from "react";
 
 export default function FloatingChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Array<{ id: number; text: string; sender: "user" | "bot" }>>([
-    { id: 1, text: "Hello! I'm your Farm Assistant. How can I help you with your farm management today?", sender: "bot" },
+  const [messages, setMessages] = useState<Array<{ id: number; text: string; sender: "user" | "bot"; jsonData?: any }>>([
+    { id: 1, text: "Hello! I'm your Plant Disease Expert. Describe your plant's symptoms or condition, and I'll analyze it and provide a detailed diagnosis in JSON format.", sender: "bot" },
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -68,6 +68,7 @@ export default function FloatingChat() {
           id: updatedMessages.length + 1,
           text: data.message,
           sender: "bot" as const,
+          jsonData: data.jsonData || null,
         };
         
         setMessages((prev) => [...prev, botResponse]);
@@ -141,8 +142,8 @@ export default function FloatingChat() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg sm:text-xl font-semibold">Farm Assistant</h3>
-                <p className="text-xs sm:text-sm text-white/80">Online</p>
+                <h3 className="text-lg sm:text-xl font-semibold">Plant Disease Expert</h3>
+                <p className="text-xs sm:text-sm text-white/80">Online - Disease Analysis</p>
               </div>
             </div>
             <button
@@ -181,7 +182,107 @@ export default function FloatingChat() {
                         : "bg-white text-[#2d3436] border border-[#e1e8ed] shadow-sm"
                     }`}
                   >
-                    <p className="text-sm sm:text-base whitespace-pre-wrap">{message.text}</p>
+                    {message.sender === "bot" && message.jsonData ? (
+                      <div className="space-y-3">
+                        <div className="border-b border-gray-200 pb-2 mb-3">
+                          <h4 className="font-semibold text-lg text-[#7faf3b] mb-1">
+                            {message.jsonData.diseaseName !== "Unknown" ? message.jsonData.diseaseName : "Analysis"}
+                          </h4>
+                          <div className="flex gap-2 text-xs">
+                            <span className={`px-2 py-1 rounded ${
+                              message.jsonData.confidence === "High" ? "bg-green-100 text-green-800" :
+                              message.jsonData.confidence === "Medium" ? "bg-yellow-100 text-yellow-800" :
+                              "bg-gray-100 text-gray-800"
+                            }`}>
+                              Confidence: {message.jsonData.confidence}
+                            </span>
+                            <span className={`px-2 py-1 rounded ${
+                              message.jsonData.severity === "Severe" ? "bg-red-100 text-red-800" :
+                              message.jsonData.severity === "Moderate" ? "bg-orange-100 text-orange-800" :
+                              "bg-blue-100 text-blue-800"
+                            }`}>
+                              Severity: {message.jsonData.severity}
+                            </span>
+                            <span className={`px-2 py-1 rounded ${
+                              message.jsonData.urgency === "High" ? "bg-red-100 text-red-800" :
+                              message.jsonData.urgency === "Medium" ? "bg-yellow-100 text-yellow-800" :
+                              "bg-gray-100 text-gray-800"
+                            }`}>
+                              Urgency: {message.jsonData.urgency}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {message.jsonData.analysis && (
+                          <div>
+                            <h5 className="font-semibold text-sm mb-1">Analysis:</h5>
+                            <p className="text-sm text-gray-700">{message.jsonData.analysis}</p>
+                          </div>
+                        )}
+                        
+                        {message.jsonData.symptoms && message.jsonData.symptoms.length > 0 && (
+                          <div>
+                            <h5 className="font-semibold text-sm mb-1">Symptoms:</h5>
+                            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                              {message.jsonData.symptoms.map((symptom: string, idx: number) => (
+                                <li key={idx}>{symptom}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {message.jsonData.causes && message.jsonData.causes.length > 0 && (
+                          <div>
+                            <h5 className="font-semibold text-sm mb-1">Possible Causes:</h5>
+                            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                              {message.jsonData.causes.map((cause: string, idx: number) => (
+                                <li key={idx}>{cause}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {message.jsonData.treatment && message.jsonData.treatment.length > 0 && (
+                          <div>
+                            <h5 className="font-semibold text-sm mb-1 text-[#7faf3b]">Treatment:</h5>
+                            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                              {message.jsonData.treatment.map((treatment: string, idx: number) => (
+                                <li key={idx}>{treatment}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {message.jsonData.prevention && message.jsonData.prevention.length > 0 && (
+                          <div>
+                            <h5 className="font-semibold text-sm mb-1 text-[#7faf3b]">Prevention:</h5>
+                            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                              {message.jsonData.prevention.map((prevention: string, idx: number) => (
+                                <li key={idx}>{prevention}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {message.jsonData.recommendations && (
+                          <div className="bg-[#f5f9f0] p-3 rounded-lg mt-3">
+                            <h5 className="font-semibold text-sm mb-1 text-[#7faf3b]">Recommendations:</h5>
+                            <p className="text-sm text-gray-700">{message.jsonData.recommendations}</p>
+                          </div>
+                        )}
+                        
+                        <details className="mt-3">
+                          <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                            View Raw JSON
+                          </summary>
+                          <pre className="mt-2 text-xs bg-gray-50 p-2 rounded overflow-auto max-h-40">
+                            {JSON.stringify(message.jsonData, null, 2)}
+                          </pre>
+                        </details>
+                      </div>
+                    ) : (
+                      <p className="text-sm sm:text-base whitespace-pre-wrap">{message.text}</p>
+                    )}
                   </div>
                 </div>
               ))}
