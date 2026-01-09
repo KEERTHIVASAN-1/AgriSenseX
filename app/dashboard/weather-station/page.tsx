@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import ModeStatus from "../../components/ModeStatus";
 // import { ThermometerIcon } from "@heroicons/react/24/outline";
 
 export default function WeatherStationPage() {
@@ -43,6 +44,7 @@ export default function WeatherStationPage() {
                 </h1>
               </div>
             </div>
+            <ModeStatus />
           </div>
         </div>
       </header>

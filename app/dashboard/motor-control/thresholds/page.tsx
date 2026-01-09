@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { publishMessage, subscribeToTopic } from "../../../../lib/mqttClient";
+import ModeStatus from "../../../components/ModeStatus";
 
 export default function ThresholdsPage() {
   const router = useRouter();
@@ -20,18 +22,90 @@ export default function ThresholdsPage() {
     }
     return 11.0;
   });
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("Locked");
+  const [statusColor, setStatusColor] = useState("green");
+  const [currentVoltage, setCurrentVoltage] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("voltageThreshold");
+      return saved ? Number(saved) : 100;
+    }
+    return 100;
+  });
+  const [currentCurrent, setCurrentCurrent] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("currentThreshold");
+      return saved ? Number(saved) : 11.0;
+    }
+    return 11.0;
+  });
 
-  const handleSave = () => {
-    localStorage.setItem("voltageThreshold", voltage.toString());
-    localStorage.setItem("currentThreshold", current.toString());
-    // Trigger custom event for same-tab updates
-    window.dispatchEvent(new CustomEvent("thresholdsUpdated"));
-    router.back();
+  useEffect(() => {
+    const unsubscribe = subscribeToTopic("anuja/esp32/settings", (payload) => {
+      try {
+        const data = JSON.parse(payload);
+        const v = typeof data.v_thresh === "number" ? data.v_thresh : 100;
+        const i = typeof data.i_thresh === "number" ? data.i_thresh : 11.0;
+
+        setVoltage(v);
+        setCurrent(i);
+        setCurrentVoltage(v);
+        setCurrentCurrent(i);
+
+        if (typeof window !== "undefined") {
+          localStorage.setItem("voltageThreshold", v.toString());
+          localStorage.setItem("currentThreshold", i.toString());
+          window.dispatchEvent(new CustomEvent("thresholdsUpdated"));
+        }
+
+        // Lock inputs and set status when settings arrive from ESP32
+        setIsEditMode(false);
+        setStatusMessage("Locked");
+        setStatusColor("green");
+      } catch (err) {
+        console.error("Error parsing threshold settings from MQTT:", err);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const handleEnableEdit = () => {
+    setIsEditMode(true);
+    setStatusMessage("✏️ Edit Mode Enabled");
+    setStatusColor("orange");
   };
 
-  const handleReset = () => {
-    setVoltage(100);
-    setCurrent(11.0);
+  const handleSave = () => {
+    const v = parseFloat(voltage.toString());
+    const i = parseFloat(current.toString());
+
+    if (isNaN(v) || isNaN(i)) {
+      setStatusMessage("❌ Invalid Values");
+      setStatusColor("red");
+      return;
+    }
+
+    localStorage.setItem("voltageThreshold", v.toString());
+    localStorage.setItem("currentThreshold", i.toString());
+
+    publishMessage("anuja/esp32/settings", {
+      v_thresh: v,
+      i_thresh: i,
+    });
+
+    setCurrentVoltage(v);
+    setCurrentCurrent(i);
+
+    // Lock inputs after save
+    setIsEditMode(false);
+    setStatusMessage("Locked");
+    setStatusColor("green");
+
+    // Trigger custom event for same-tab updates
+    window.dispatchEvent(new CustomEvent("thresholdsUpdated"));
   };
 
   return (
@@ -57,6 +131,7 @@ export default function ThresholdsPage() {
                 </h1>
               </div>
             </div>
+            <ModeStatus />
           </div>
         </div>
       </header>
@@ -76,7 +151,10 @@ export default function ThresholdsPage() {
                 type="number"
                 value={voltage}
                 onChange={(e) => setVoltage(Number(e.target.value))}
-                className="w-full h-12 rounded-lg border border-green-300 bg-white px-4 font-mono text-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 outline-none transition-all"
+                disabled={!isEditMode}
+                className={`w-full h-12 rounded-lg border border-green-300 bg-white px-4 font-mono text-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 outline-none transition-all ${
+                  !isEditMode ? "opacity-60 cursor-not-allowed" : ""
+                }`}
                 placeholder="Enter voltage threshold"
               />
               <p className="text-xs text-gray-500">
@@ -93,7 +171,10 @@ export default function ThresholdsPage() {
                 step="0.1"
                 value={current}
                 onChange={(e) => setCurrent(Number(e.target.value))}
-                className="w-full h-12 rounded-lg border border-green-300 bg-white px-4 font-mono text-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 outline-none transition-all"
+                disabled={!isEditMode}
+                className={`w-full h-12 rounded-lg border border-green-300 bg-white px-4 font-mono text-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 outline-none transition-all ${
+                  !isEditMode ? "opacity-60 cursor-not-allowed" : ""
+                }`}
                 placeholder="Enter current threshold"
               />
               <p className="text-xs text-gray-500">
@@ -102,19 +183,46 @@ export default function ThresholdsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
-            <button
-              onClick={handleReset}
-              className="px-6 py-3 rounded-lg text-green-700 font-semibold hover:bg-green-100 transition-colors"
+          <div className="flex flex-col gap-4 mt-8 pt-6 border-t border-gray-200">
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={handleEnableEdit}
+                className="px-6 py-3 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600 shadow transition-all"
+              >
+                EDIT
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={!isEditMode}
+                className={`px-6 py-3 rounded-lg bg-green-500 text-white font-bold hover:bg-green-600 shadow transition-all ${
+                  !isEditMode ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                UPDATE
+              </button>
+            </div>
+
+            <div
+              className={`text-center font-bold ${
+                statusColor === "green"
+                  ? "text-green-600"
+                  : statusColor === "orange"
+                  ? "text-orange-600"
+                  : "text-red-600"
+              }`}
             >
-              Reset
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-6 py-3 rounded-lg bg-green-500 text-white font-bold hover:bg-green-600 shadow transition-all"
-            >
-              Save
-            </button>
+              {statusMessage}
+            </div>
+
+            <div className="text-center text-sm text-gray-600">
+              <p>
+                Current Settings:
+                <br />
+                Voltage = <b className="text-gray-900">{currentVoltage}</b> V
+                <br />
+                Current = <b className="text-gray-900">{currentCurrent}</b> A
+              </p>
+            </div>
           </div>
         </section>
       </div>

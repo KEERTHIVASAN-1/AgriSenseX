@@ -1,11 +1,9 @@
 'use client';
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useTheme } from "../contexts/ThemeContext";
+import ModeStatus from "../components/ModeStatus";
 
 export default function DashboardPage() {
-
   // Weather data
   const weatherData = {
     temperature: 32,
@@ -30,6 +28,9 @@ export default function DashboardPage() {
             </span>
           </div>
 
+          {/* Mode Status Display */}
+          <ModeStatus />
+
           {/* Top-right controls - responsive */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             <button
@@ -37,7 +38,7 @@ export default function DashboardPage() {
               aria-label="Notifications"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 3 0 1 1-5.714 0" />
               </svg>
 
             </button>
@@ -132,30 +133,39 @@ export default function DashboardPage() {
                 href: "/dashboard/drone-monitoring",
               },
             ].map((device) => {
-              const CardWrapper = device.href ? Link : 'div';
-              const cardProps = device.href ? { href: device.href } : {};
+              const cardContent = (
+                <div 
+                  className="group relative w-full flex flex-col overflow-hidden rounded-2xl border border-white/50 shadow-sm hover:shadow-xl hover:border-white transition-all duration-300 hover:-translate-y-1 cursor-pointer p-4 sm:p-6 min-h-[200px] sm:min-h-[240px]"
+                  style={{
+                    backgroundImage: `url(${device.icon})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                  }}
+                >
+                  {/* Overlay for better text readability */}
+                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
+                  {/* Text Below Image */}
+                  <div className="flex flex-col items-center justify-end text-center relative z-10 h-full">
+                    <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white drop-shadow-lg">
+                      {device.label}
+                    </h3>
+                  </div>
+                </div>
+              );
+
+              if (device.href) {
+                return (
+                  <Link key={device.label} href={device.href}>
+                    {cardContent}
+                  </Link>
+                );
+              }
 
               return (
-                <CardWrapper key={device.label} {...(cardProps as any)}>
-                  <div 
-                    className="group relative w-full flex flex-col overflow-hidden rounded-2xl border border-white/50 shadow-sm hover:shadow-xl hover:border-white transition-all duration-300 hover:-translate-y-1 cursor-pointer p-4 sm:p-6 min-h-[200px] sm:min-h-[240px]"
-                    style={{
-                      backgroundImage: `url(${device.icon})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat'
-                    }}
-                  >
-                    {/* Overlay for better text readability */}
-                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
-                    {/* Text Below Image */}
-                    <div className="flex flex-col items-center justify-end text-center relative z-10 h-full">
-                      <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white drop-shadow-lg">
-                        {device.label}
-                      </h3>
-                    </div>
-                  </div>
-                </CardWrapper>
+                <div key={device.label}>
+                  {cardContent}
+                </div>
               );
             })}
           </div>

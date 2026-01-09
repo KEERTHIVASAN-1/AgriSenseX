@@ -1,13 +1,22 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import ModeStatus from "../../../../components/ModeStatus";
+import { publishMessage, subscribeToTopic } from "../../../../../lib/mqttClient";
 
 type ValveDetailsPageProps = {
   params: Promise<{
     valveId: string;
   }>;
 };
+
+type ValveState = {
+  isOn: boolean;
+};
+
+const VALVE_STATUS_TOPIC = "anuja/esp32/valve/status";
+const VALVE_CONTROL_TOPIC = "anuja/esp32/valve/control";
 
 function formatValveLabel(valveId: string) {
   const parts = valveId.split("-");
@@ -17,218 +26,85 @@ function formatValveLabel(valveId: string) {
   return valveId.replace(/-/g, " ");
 }
 
+function getValveKey(label: string): "V1" | "V2" | "V3" {
+  if (label.includes("1")) return "V1";
+  if (label.includes("2")) return "V2";
+  return "V3";
+}
+
 export default function ValveDetailsPage({ params }: ValveDetailsPageProps) {
   const router = useRouter();
   const { valveId } = use(params);
   const label = formatValveLabel(valveId);
-  const [isOpen, setIsOpen] = useState(false);
-  const [onTime, setOnTime] = useState("06:00");
-  const [offTime, setOffTime] = useState("18:00");
-  const [timerDuration, setTimerDuration] = useState(30);
-  const [timerActive, setTimerActive] = useState(false);
-  const [timerRemaining, setTimerRemaining] = useState(0);
-
-  // Load valve state from localStorage
-  useEffect(() => {
+  const valveKey = getValveKey(label);
+  const [isOpen, setIsOpen] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       const savedValves = localStorage.getItem("valves");
       if (savedValves) {
         try {
           const valves = JSON.parse(savedValves);
-          const valveKey = label; // e.g., "Valve 1"
-          if (valves[valveKey]) {
-            const valve = valves[valveKey];
-            setOnTime(valve.onTime || "06:00");
-            setOffTime(valve.offTime || "18:00");
-            setIsOpen(valve.isOn || false);
-            setTimerDuration(valve.timerDuration || 30);
-            setTimerActive(valve.timerActive || false);
-            setTimerRemaining(valve.timerRemaining || 0);
-          }
+          return !!valves[label]?.isOn;
         } catch (e) {
           console.error("Error loading valve state:", e);
         }
       }
     }
-  }, [label]);
+    return valveKey === "V1"; // default keep V1 on for safety
+  });
 
-  // Timer countdown
+  // Subscribe to valve status
   useEffect(() => {
-    if (timerActive && timerRemaining > 0) {
-      const interval = setInterval(() => {
-        setTimerRemaining((prev) => {
-          if (prev <= 1) {
-            setTimerActive(false);
-            setIsOpen(false);
-            // Save to localStorage
-            if (typeof window !== "undefined") {
-              const savedValves = localStorage.getItem("valves");
-              const valves = savedValves ? JSON.parse(savedValves) : {};
-              valves[label] = {
-                ...valves[label],
-                timerActive: false,
-                timerRemaining: 0,
-                isOn: false,
-              };
-              localStorage.setItem("valves", JSON.stringify(valves));
-              // Trigger custom event for same-tab updates
-              window.dispatchEvent(new CustomEvent("valvesUpdated"));
-            }
-            return 0;
-          }
-          // Save timer remaining on each tick
-          const newRemaining = prev - 1;
-          if (typeof window !== "undefined") {
-            const savedValves = localStorage.getItem("valves");
-            const valves = savedValves ? JSON.parse(savedValves) : {};
-            valves[label] = {
-              ...valves[label],
-              timerRemaining: newRemaining,
-            };
-            localStorage.setItem("valves", JSON.stringify(valves));
-            // Trigger custom event for same-tab updates
-            window.dispatchEvent(new CustomEvent("valvesUpdated"));
-          }
-          return newRemaining;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timerActive, timerRemaining, label]);
+    const unsubscribe = subscribeToTopic(VALVE_STATUS_TOPIC, (payload) => {
+      const msg = payload.trim();
+      const parts = msg.split(",");
+      let open = false;
+      parts.forEach((p) => {
+        const [k, v] = p.split("=");
+        const on = v?.trim().toUpperCase() === "ON";
+        if (k === valveKey) {
+          open = on;
+        }
+      });
 
-  const updateValveTime = (field: "onTime" | "offTime", value: string) => {
-    if (field === "onTime") {
-      setOnTime(value);
-    } else {
-      setOffTime(value);
-    }
+      setIsOpen(open);
 
-    // Save to localStorage
-    if (typeof window !== "undefined") {
-      const savedValves = localStorage.getItem("valves");
-      const valves = savedValves ? JSON.parse(savedValves) : {};
-      valves[label] = {
-        ...valves[label],
-        [field]: value,
-        isOn: isOpen,
-        timerDuration,
-        timerActive,
-        timerRemaining,
-      };
-      localStorage.setItem("valves", JSON.stringify(valves));
-      // Trigger custom event for same-tab updates
-      window.dispatchEvent(new CustomEvent("valvesUpdated"));
-    }
-  };
+      // persist
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("valves");
+        const valves = saved ? JSON.parse(saved) : {};
+        valves[label] = { isOn: open };
+        localStorage.setItem("valves", JSON.stringify(valves));
+      }
+    });
 
-  const updateTimerDuration = (value: number) => {
-    setTimerDuration(value);
-    // Save to localStorage
-    if (typeof window !== "undefined") {
-      const savedValves = localStorage.getItem("valves");
-      const valves = savedValves ? JSON.parse(savedValves) : {};
-      valves[label] = {
-        ...valves[label],
-        timerDuration: value,
-        isOn: isOpen,
-        onTime,
-        offTime,
-        timerActive,
-        timerRemaining,
-      };
-      localStorage.setItem("valves", JSON.stringify(valves));
-      // Trigger custom event for same-tab updates
-      window.dispatchEvent(new CustomEvent("valvesUpdated"));
-    }
-  };
+    return () => unsubscribe();
+  }, [label, valveKey]);
 
   const toggleValve = () => {
-    const newState = !isOpen;
-    let newTimerActive = timerActive;
-    let newTimerRemaining = timerRemaining;
+    const desired = !isOpen;
 
-    // If opening the valve, start the timer
-    if (newState && !timerActive) {
-      newTimerActive = true;
-      newTimerRemaining = timerDuration * 60;
-      setTimerActive(true);
-      setTimerRemaining(timerDuration * 60);
-    }
-    
-    // If closing the valve, stop the timer
-    if (!newState && timerActive) {
-      newTimerActive = false;
-      newTimerRemaining = 0;
-      setTimerActive(false);
-      setTimerRemaining(0);
+    if (!desired && typeof window !== "undefined") {
+      const saved = localStorage.getItem("valves");
+      const valves = saved ? JSON.parse(saved) : {};
+      valves[label] = { isOn: isOpen };
+      const onCount = Object.values(valves).filter((v: ValveState) => v?.isOn).length;
+      if (onCount <= 1) {
+        alert("At least one valve must remain ON");
+        return;
+      }
     }
 
-    setIsOpen(newState);
+    setIsOpen(desired);
 
-    // Save to localStorage
     if (typeof window !== "undefined") {
-      const savedValves = localStorage.getItem("valves");
-      const valves = savedValves ? JSON.parse(savedValves) : {};
-      valves[label] = {
-        ...valves[label],
-        isOn: newState,
-        onTime,
-        offTime,
-        timerDuration,
-        timerActive: newTimerActive,
-        timerRemaining: newTimerRemaining,
-      };
+      const saved = localStorage.getItem("valves");
+      const valves = saved ? JSON.parse(saved) : {};
+      valves[label] = { isOn: desired };
       localStorage.setItem("valves", JSON.stringify(valves));
-      // Trigger custom event for same-tab updates
-      window.dispatchEvent(new CustomEvent("valvesUpdated"));
     }
+
+    publishMessage(VALVE_CONTROL_TOPIC, `${valveKey}=${desired ? "ON" : "OFF"}`);
   };
-
-  const startTimer = () => {
-    setTimerActive(true);
-    setTimerRemaining(timerDuration * 60);
-    setIsOpen(true);
-
-    // Save to localStorage
-    if (typeof window !== "undefined") {
-      const savedValves = localStorage.getItem("valves");
-      const valves = savedValves ? JSON.parse(savedValves) : {};
-      valves[label] = {
-        ...valves[label],
-        timerActive: true,
-        timerRemaining: timerDuration * 60,
-        isOn: true,
-      };
-      localStorage.setItem("valves", JSON.stringify(valves));
-      // Trigger custom event for same-tab updates
-      window.dispatchEvent(new CustomEvent("valvesUpdated"));
-    }
-  };
-
-  const stopTimer = () => {
-    setTimerActive(false);
-    setTimerRemaining(0);
-    setIsOpen(false); // Close the valve when timer stops
-
-    // Save to localStorage
-    if (typeof window !== "undefined") {
-      const savedValves = localStorage.getItem("valves");
-      const valves = savedValves ? JSON.parse(savedValves) : {};
-      valves[label] = {
-        ...valves[label],
-        timerActive: false,
-        timerRemaining: 0,
-        isOn: false,
-      };
-      localStorage.setItem("valves", JSON.stringify(valves));
-      // Trigger custom event for same-tab updates
-      window.dispatchEvent(new CustomEvent("valvesUpdated"));
-    }
-  };
-
-  const minutes = Math.floor(timerRemaining / 60);
-  const seconds = timerRemaining % 60;
-  const timerDisplay = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0]">
@@ -267,6 +143,7 @@ export default function ValveDetailsPage({ params }: ValveDetailsPageProps) {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <ModeStatus />
             <button className="flex h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 transition-all active:scale-95 text-lg sm:text-xl shadow-sm">
               ⚙️
             </button>
@@ -308,78 +185,6 @@ export default function ValveDetailsPage({ params }: ValveDetailsPageProps) {
                     </span>
                   </div>
                 </div>
-
-                {/* Time Settings */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700 uppercase">
-                      On Time
-                    </label>
-                    <input
-                      type="time"
-                      value={onTime}
-                      onChange={(e) => updateValveTime("onTime", e.target.value)}
-                      className="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 text-sm font-mono text-gray-800 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700 uppercase">
-                      Off Time
-                    </label>
-                    <input
-                      type="time"
-                      value={offTime}
-                      onChange={(e) => updateValveTime("offTime", e.target.value)}
-                      className="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 text-sm font-mono text-gray-800 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Timer Section */}
-                <div className="space-y-4 pt-4 border-t border-gray-200">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700 uppercase">
-                      Timer Duration (minutes)
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="1440"
-                      value={timerDuration}
-                      onChange={(e) => updateTimerDuration(parseInt(e.target.value) || 0)}
-                      disabled={timerActive}
-                      className="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 text-sm font-mono text-gray-800 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all disabled:bg-gray-100 disabled:text-gray-500"
-                    />
-                  </div>
-
-                  {/* Timer Display and Controls */}
-                  {timerActive ? (
-                    <div className="space-y-3">
-                      <div className="rounded-lg bg-blue-100 p-4 text-center border border-blue-200">
-                        <p className="text-xs font-semibold text-gray-600 uppercase mb-2">
-                          Time Remaining
-                        </p>
-                        <p className="text-3xl font-mono font-bold text-blue-600">
-                          {timerDisplay}
-                        </p>
-                      </div>
-                      <button
-                        onClick={stopTimer}
-                        className="w-full py-3 rounded-lg bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-all"
-                      >
-                        Stop Timer
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={startTimer}
-                      disabled={timerDuration <= 0}
-                      className="w-full py-3 rounded-lg bg-blue-500 text-white text-sm font-bold hover:bg-blue-600 transition-all disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
-                    >
-                      Start Timer
-                    </button>
-                  )}
-                </div>
               </div>
             </section>
           </div>
@@ -402,7 +207,7 @@ export default function ValveDetailsPage({ params }: ValveDetailsPageProps) {
                     isOpen ? "text-blue-600" : "text-gray-500"
                   }`}
                 >
-                  {isOpen ? "VALVE OPEN" : "VALVE CLOSED"}
+                  {isOpen ? "VALVE ON" : "VALVE OFF"}
                 </p>
               </div>
 
@@ -415,7 +220,7 @@ export default function ValveDetailsPage({ params }: ValveDetailsPageProps) {
                       : "bg-white border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600"
                   }`}
                 >
-                  OPEN VALVE
+                  VALVE ON
                 </button>
 
                 <button
@@ -426,7 +231,7 @@ export default function ValveDetailsPage({ params }: ValveDetailsPageProps) {
                       : "bg-white border-gray-300 text-gray-600 hover:border-rose-400 hover:text-rose-600"
                   }`}
                 >
-                  CLOSE VALVE
+                  VALVE OFF
                 </button>
               </div>
             </section>
