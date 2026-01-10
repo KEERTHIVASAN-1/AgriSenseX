@@ -1,23 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import ModeStatus from "../../components/ModeStatus";
-// import { ThermometerIcon } from "@heroicons/react/24/outline";
 
 export default function WeatherStationPage() {
   const router = useRouter();
 
-  const weatherData = {
-    temperature: 32,
-    humidity: 58,
-    rainfall: 0,
-    windSpeed: 12.8,
-    soilMoisture: 42,
-    soilMoistureTarget: 45,
-    soilPH: 6.8,
-    soilEC: "14-10-8",
-  };
+  // Fixed default values (no random generation)
+  const [weatherData] = useState({
+    temperature: 21.0,     // Fixed default: 21.0°C
+    humidity: 47.0,        // Fixed default: 47.0%
+    rainfall: null as number | null,
+    windSpeed: null as number | null,
+    soilMoisture: 85,      // Fixed default: 85%
+    soilPH: 7.1,           // Fixed default: 7.1 pH
+  });
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0] text-gray-900">
@@ -68,7 +67,7 @@ export default function WeatherStationPage() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-700">Temperature</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {weatherData.temperature}°C
+                    {weatherData.temperature.toFixed(1)}°C
                   </p>
                 </div>
               </div>
@@ -87,7 +86,7 @@ export default function WeatherStationPage() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-700">Humidity</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {weatherData.humidity}%
+                    {weatherData.humidity.toFixed(1)}%
                   </p>
                 </div>
               </div>
@@ -105,8 +104,8 @@ export default function WeatherStationPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-700">Rainfall</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {weatherData.rainfall} mm
+                  <p className="text-2xl font-bold text-gray-900 font-mono">
+                    {weatherData.rainfall !== null ? `${weatherData.rainfall} mm` : "------"}
                   </p>
                 </div>
               </div>
@@ -124,8 +123,8 @@ export default function WeatherStationPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-700">Wind Speed</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {weatherData.windSpeed} km/h
+                  <p className="text-2xl font-bold text-gray-900 font-mono">
+                    {weatherData.windSpeed !== null ? `${weatherData.windSpeed} km/h` : "------"}
                   </p>
                 </div>
               </div>
@@ -167,7 +166,7 @@ export default function WeatherStationPage() {
                   <p className="text-sm font-semibold text-white drop-shadow-md">pH</p>
                   <div className="flex items-center gap-3">
                     <p className="text-2xl font-bold text-white drop-shadow-md">
-                      {weatherData.soilPH}
+                      {weatherData.soilPH.toFixed(1)}
                     </p>
                   </div>
                 </div>

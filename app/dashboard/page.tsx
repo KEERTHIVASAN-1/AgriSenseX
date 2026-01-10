@@ -6,10 +6,10 @@ import ModeStatus from "../components/ModeStatus";
 export default function DashboardPage() {
   // Weather data
   const weatherData = {
-    temperature: 32,
-    humidity: 58,
+    temperature: 21,
+    humidity: 47.0,
     rainfall: 0,
-    windSpeed: 12.8,
+    windSpeed: 0,
   };
 
   return (
