@@ -1,12 +1,22 @@
 "use client";
 
-const BROKER_URL = "wss://t18114d7.ala.dedicated.aws.emqxcloud.com:8084/mqtt";
+const BROKER_URL = "wss://howto-representation-armed-ruling.trycloudflare.com/mqtt";
 const MQTT_SCRIPT_SRC = "https://unpkg.com/mqtt/dist/mqtt.min.js";
 
 declare global {
   interface Window {
     mqtt?: {
-      connect: (url: string, options?: { username?: string; password?: string; clientId?: string }) => MqttClientLike;
+      connect: (
+        url: string,
+        options?: {
+          username?: string;
+          password?: string;
+          clientId?: string;
+          clean?: boolean;
+          reconnectPeriod?: number;
+          connectTimeout?: number;
+        }
+      ) => MqttClientLike;
     };
   }
 }
@@ -66,9 +76,12 @@ export async function getMqttClient(): Promise<MqttClientLike | null> {
         }
 
         const client = window.mqtt.connect(BROKER_URL, {
-          username: "AGRI",
-          password: "1234",
+          username: "agri",
+          password: "agriSense-1x",
           clientId: "agri_web_" + Math.random().toString(16).substr(2, 8),
+          clean: true,
+          reconnectPeriod: 2000,
+          connectTimeout: 10000,
         });
 
         return await new Promise<MqttClientLike | null>((resolve) => {
