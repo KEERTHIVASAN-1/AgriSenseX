@@ -286,7 +286,7 @@ export default function DashboardPage() {
     <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0]">
       {/* Top weather banner - desktop: centered content */}
       <header className="w-full">
-        <div className="relative h-40 sm:h-48 lg:h-52 w-full overflow-hidden rounded-none shadow-md mb-0">
+        <Link href="/dashboard/weather-details" className="block relative h-40 sm:h-48 lg:h-52 w-full overflow-hidden rounded-none shadow-md mb-0 cursor-pointer hover:opacity-95 transition-opacity">
           <div className="absolute inset-0 overflow-hidden">
             <img src="/images/main_page_top.png" alt="Farm Background" className="h-full w-full object-cover object-bottom origin-bottom scale-y-130 rounded-none" />
           </div>
@@ -308,7 +308,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-        </div>
+        </Link>
         <div className="w-full h-1 bg-black/30 shadow-[0_-4px_10px_rgba(0,0,0,0.1)]" />
       </header>
 
@@ -379,16 +379,16 @@ export default function DashboardPage() {
                     {/* Expanded: Manual / Auto and valve controls */}
                     {isExpanded && (
                       <div className="border-t border-[#b8d4a0] bg-[#e8f5e0]/50 p-4 space-y-4">
-                        <div className="flex rounded-xl bg-green-50 p-1">
+                        <div className="flex rounded-full bg-#e8f5e0-50 p-1">
                           <button
                             onClick={(e) => { e.stopPropagation(); setMotorMode(motor.id, "manual"); }}
-                            className={`flex-1 rounded-lg py-2 text-sm font-bold ${mode === "manual" ? "bg-[#7faf3b] text-white shadow" : "text-[#2d3436] hover:bg-green-100"}`}
+                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "manual" ? "bg-[#7faf3b] text-white shadow" : "text-[#2d3436] hover:bg-green-100"}`}
                           >
                             MANUAL
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setMotorMode(motor.id, "auto"); }}
-                            className={`flex-1 rounded-lg py-2 text-sm font-bold ${mode === "auto" ? "bg-[#7faf3b] text-white shadow" : "text-[#2d3436] hover:bg-green-100"}`}
+                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "auto" ? "bg-[#7faf3b] text-white shadow" : "text-[#2d3436] hover:bg-green-100"}`}
                           >
                             AUTO
                           </button>
@@ -413,62 +413,79 @@ export default function DashboardPage() {
                             ))}
                           </div>
                         ) : (
-                          <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-2 sm:gap-3">
                             {["Valve 1", "Valve 2"].map((v) => (
-                              <div key={v} className="rounded-xl bg-white/80 border border-[#b8d4a0] p-4">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#7faf3b] text-white">
-                                    <ValveIcon className="w-5 h-5 text-white" />
+                              <div key={v} className="rounded-xl bg-white/90 border border-[#b8d4a0] p-2 sm:p-3 flex flex-col items-center">
+                                {/* Valve Icon and Name */}
+                                <div className="flex flex-col items-center gap-1 mb-2">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7faf3b] text-white">
+                                    <ValveIcon className="w-4 h-4 text-white" />
                                   </div>
-                                  <span className="font-bold text-[#2d3436]">{v}</span>
+                                  <span className="font-bold text-[#2d3436] text-xs whitespace-nowrap">{v}</span>
                                 </div>
-                                <div className="flex gap-2 items-center flex-wrap">
-                                  <div className="flex-1 min-w-[100px]">
-                                    <label className="text-xs text-gray-600 block mb-1">Start Time</label>
+
+                                {/* Time Inputs with Individual Labels */}
+                                <div className="flex items-end gap-1.5 sm:gap-2 w-full mb-2">
+                                  {/* Start Time */}
+                                  <div className="flex-1 flex flex-col items-center min-w-0">
+                                    <label className="text-[9px] sm:text-[10px] text-gray-600 mb-1 font-medium whitespace-nowrap">
+                                      Start Time
+                                    </label>
                                     <input
                                       type="time"
                                       value={motorState.onTime}
                                       onChange={(e) => updateMotorTime(motor.name, "onTime", e.target.value)}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                                      onFocus={(e) => e.stopPropagation()}
+                                      className="w-full rounded border border-gray-300 px-1 sm:px-1.5 py-1 text-[9px] sm:text-[10px] text-center bg-white"
                                     />
                                   </div>
-                                  <div className="flex-1 min-w-[100px]">
-                                    <label className="text-xs text-gray-600 block mb-1">End Time</label>
+
+                                  {/* Vertical Divider */}
+                                  <div className="w-0.5 h-10 bg-gray-600 rounded-full"></div>
+
+                                  {/* End Time */}
+                                  <div className="flex-1 flex flex-col items-center min-w-0">
+                                    <label className="text-[9px] sm:text-[10px] text-gray-600 mb-1 font-medium whitespace-nowrap">
+                                      End Time
+                                    </label>
                                     <input
                                       type="time"
                                       value={motorState.offTime}
                                       onChange={(e) => updateMotorTime(motor.name, "offTime", e.target.value)}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                                      onFocus={(e) => e.stopPropagation()}
+                                      className="w-full rounded border border-gray-300 px-1 sm:px-1.5 py-1 text-[9px] sm:text-[10px] text-center bg-white"
                                     />
                                   </div>
                                 </div>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); saveAuto(motor.name, idx); }}
-                                  className="mt-3 w-full rounded-lg py-2 bg-[#7faf3b] text-white text-sm font-bold"
-                                >
-                                  SAVE
-                                </button>
+
+                                {/* Save Button - Half Width and Centered */}
+                                <div className="w-full flex justify-center">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); saveAuto(motor.name, idx); }}
+                                    className="w-1/2 rounded-lg py-1.5 bg-[#7faf3b] hover:bg-[#6a9331] text-white text-xs font-bold transition-colors"
+                                  >
+                                    SAVE
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>
                         )}
-                        {/* Add Motor + button - only visible below expanded motor */}
-                        <div className="pt-4 flex justify-end">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); addMotor(); }}
-                            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2d3436] text-white shadow-md hover:bg-[#1a1d1e] transition-colors"
-                            aria-label="Add motor"
-                          >
-                            <PlusIcon className="w-6 h-6" />
-                          </button>
-                        </div>
                       </div>
                     )}
                   </div>
                 );
               })}
+              {/* Add Motor + button - outside motor blocks */}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={addMotor}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2d3436] text-white shadow-md hover:bg-[#1a1d1e] transition-colors"
+                  aria-label="Add motor"
+                >
+                  <PlusIcon className="w-6 h-6" />
+                </button>
+              </div>
             </div>
           </section>
 
