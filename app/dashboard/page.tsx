@@ -46,10 +46,23 @@ export default function DashboardPage() {
   });
 
   // Motors list (Motor 1, Motor 2, ... can add more)
-  const [motorList, setMotorList] = useState<{ id: string; name: string }[]>(() => [
-    { id: "motor1", name: "Motor 1" },
-    { id: "motor2", name: "Motor 2" },
-  ]);
+  // Motors list (Motor 1, Motor 2, ... can add more)
+  const [motorList, setMotorList] = useState<{ id: string; name: string }[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("motorList");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error("Error loading motor list:", e);
+        }
+      }
+    }
+    return [
+      { id: "motor1", name: "Motor 1" },
+      { id: "motor2", name: "Motor 2" },
+    ];
+  });
   const [expandedMotor, setExpandedMotor] = useState<string | null>(null);
   const [motorModes, setMotorModes] = useState<Record<string, "manual" | "auto">>({ motor1: "manual", motor2: "manual" });
   const [motors, setMotors] = useState<Record<string, MotorState>>(() => {
@@ -89,7 +102,48 @@ export default function DashboardPage() {
   const autoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const modeRef = useRef<Record<string, "manual" | "auto">>({ motor1: "manual", motor2: "manual" });
 
-  const weatherData = { temperature: 21, humidity: 47.0, rainfall: 0, windSpeed: 0 };
+  const [weatherData, setWeatherData] = useState({ temperature: 21, humidity: 47.0, rainfall: 0, windSpeed: 0 });
+
+  // Fetch real-time weather data based on user location
+  useEffect(() => {
+    async function fetchWeatherData(latitude: number, longitude: number) {
+      try {
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&timezone=auto`
+        );
+        const data = await res.json();
+        setWeatherData({
+          temperature: Math.round(data.current.temperature_2m),
+          humidity: data.current.relative_humidity_2m,
+          rainfall: data.current.precipitation || 0,
+          windSpeed: data.current.wind_speed_10m || 0,
+        });
+      } catch (error) {
+        console.error("Failed to fetch weather:", error);
+      }
+    }
+
+    // Get user's real-time location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          fetchWeatherData(latitude, longitude);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          // Fallback to Erode coordinates
+          fetchWeatherData(11.3410, 77.7172);
+        }
+      );
+    } else {
+      // Geolocation not supported, use default Erode coordinates
+      fetchWeatherData(11.3410, 77.7172);
+    }
+  }, []);
+
+  // Handle weather banner click
+
 
   useEffect(() => {
     modeRef.current = motorModes;
@@ -255,13 +309,43 @@ export default function DashboardPage() {
   };
 
   const addMotor = () => {
-    const n = motorList.length + 1;
-    setMotorList((prev) => [...prev, { id: `motor${n}`, name: `Motor ${n}` }]);
-    setMotors((prev) => ({
-      ...prev,
-      [`Motor ${n}`]: { isOn: false, onTime: "06:00", offTime: "18:00" },
-    }));
-    setMotorModes((prev) => ({ ...prev, [`motor${n}`]: "manual" }));
+    let n = 1;
+    while (motorList.some(m => m.name === `Motor ${n}`)) {
+      n++;
+    }
+    const newName = `Motor ${n}`;
+    const newId = `motor_custom_${Date.now()}`;
+
+    setMotorList((prev) => {
+      const updated = [...prev, { id: newId, name: newName }];
+      if (typeof window !== "undefined") localStorage.setItem("motorList", JSON.stringify(updated));
+      return updated;
+    });
+    setMotors((prev) => {
+      const updated = {
+        ...prev,
+        [newName]: { isOn: false, onTime: "06:00", offTime: "18:00" },
+      };
+      if (typeof window !== "undefined") localStorage.setItem("motors", JSON.stringify(updated));
+      return updated;
+    });
+    setMotorModes((prev) => ({ ...prev, [newId]: "manual" }));
+  };
+
+  const deleteMotor = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to delete ${name}?`)) {
+      setMotorList((prev) => {
+        const updated = prev.filter(m => m.id !== id);
+        if (typeof window !== "undefined") localStorage.setItem("motorList", JSON.stringify(updated));
+        return updated;
+      });
+      setMotors((prev) => {
+        const updated = { ...prev };
+        delete updated[name];
+        if (typeof window !== "undefined") localStorage.setItem("motors", JSON.stringify(updated));
+        return updated;
+      });
+    }
   };
 
   useEffect(() => {
@@ -283,14 +367,14 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-gradient-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0]">
+    <div className="relative flex min-h-screen flex-col" style={{ backgroundColor: '#eefae6' }}>
       {/* Top weather banner - desktop: centered content */}
-      <header className="w-full">
+      <header className="w-full shadow-[0px_9px_3px_-4px_rgba(0,_0,_0,_0.35)]">
         <Link href="/dashboard/weather-details" className="block relative h-40 sm:h-48 lg:h-52 w-full overflow-hidden rounded-none shadow-md mb-0 cursor-pointer hover:opacity-95 transition-opacity">
           <div className="absolute inset-0 overflow-hidden">
-            <img src="/images/main_page_top.png" alt="Farm Background" className="h-full w-full object-cover object-bottom origin-bottom scale-y-130 rounded-none" />
+            <img src="/images/main_page_top.png" alt="Farm Background" className="h-full w-full object-cover object-bottom origin-bottom scale-y-130 rounded-none " />
           </div>
-          <div className="h-full flex items-center justify-center px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="h-full flex items-center justify-center px-4 sm:px-6 lg:px-8 relative z-10 ">
             <div className="w-full max-w-5xl lg:max-w-6xl mx-auto grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 place-items-center">
               <div className="flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2 mb-2">
@@ -309,16 +393,15 @@ export default function DashboardPage() {
             </div>
           </div>
         </Link>
-        <div className="w-full h-1 bg-black/30 shadow-[0_-4px_10px_rgba(0,0,0,0.1)]" />
       </header>
 
-      <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 pb-8 sm:pt-8 sm:pb-12 lg:pt-10 lg:pb-16">
-        <div className="max-w-5xl lg:max-w-6xl mx-auto">
+      <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 pb-8 sm:pt-8 sm:pb-12 lg:pt-10 lg:pb-16 ">
+        <div className="max-w-5xl lg:max-w-6xl mx-auto ">
           {/* Phase Monitoring - desktop: card layout like reference */}
-          <section className="mb-8 rounded-2xl p-5 sm:p-6 lg:p-8 bg-[#d4e8c4]/60 border border-[#b8d4a0] shadow-[0_4px_14px_rgba(127,175,59,0.12)]">
+          <section className="mb-8 rounded-2xl p-5 sm:p-6 lg:p-8 bg-[#d4e8c4]/60 border border-[#b8d4a0] shadow-[5px_9px_3px_-4px_rgba(0,_0,_0,_0.35)]">
             <h2 className="text-center text-base sm:text-lg font-bold uppercase tracking-wider text-[#2d3436] mb-1">Phase Monitoring</h2>
             <p className="text-center text-xs sm:text-sm text-[#2d3436]/80 mb-4 sm:mb-6">Click on each card to view Power and Energy</p>
-            <div className="flex justify-center gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6">
+            <div className="flex justify-center gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 ">
               {phaseCircles.map((p) => (
                 <div key={p.id} className={`flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-white/80 border-2 ${p.borderClass} shadow-sm`}>
                   <span className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">{p.v}V</span>
@@ -327,7 +410,7 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-            <div className="rounded-xl p-4 bg-[#c8e0b4]/50 border border-[#b8d4a0] shadow-sm flex items-center justify-between gap-4">
+            <div className="rounded-xl p-4 bg-[#c8e0b4]/50 border border-[#b8d4a0] shadow-[0px_7px_9px_-7px_rgba(0,_0,_0,_0.35)] flex items-center justify-between gap-4">
               <div>
                 <label className="text-sm font-semibold text-[#5a7c3e] underline block mb-1">Voltage & Current Threshold:</label>
                 <p className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">{voltage}V | {current} A</p>
@@ -349,30 +432,46 @@ export default function DashboardPage() {
                 const hasMqtt = idx < 2;
 
                 return (
-                  <div key={motor.id} className="rounded-2xl border border-[#b8d4a0] bg-[#d4e8c4]/50 shadow-sm overflow-hidden">
+                  <div key={motor.id} className="rounded-2xl border border-[#b8d4a0] bg-[#d4e8c4]/50 shadow-[0px_8px_13px_-5px_rgba(0,_0,_0,_0.35)] overflow-hidden">
                     {/* Motor header - click to expand/collapse */}
                     <div
-                      className="flex items-center justify-between p-4 cursor-pointer"
+                      className="flex items-center justify-between p-4 cursor-pointer bg-[background: #D9D9D9]"
                       onClick={() => setExpandedMotor(isExpanded ? null : motor.id)}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#2d3436] text-white overflow-hidden">
-                          <img src={MOTOR_ICON_SRC} alt="" className="w-7 h-7 object-contain invert" />
+                      <div className="flex items-center gap-3 ">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl text-white overflow-hidden">
+                          <img src="\images\electric-motor.png" alt="" className="w-full h-full object-contain" />
                         </div>
                         <span className="text-lg font-bold text-[#2d3436]">{motor.name}</span>
                       </div>
-                      <div className="flex flex-col items-end gap-0.5">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (hasMqtt) toggleMotor(motor.name, idx);
-                          }}
-                          className={`relative w-14 h-8 rounded-full transition-colors ${motorState.isOn ? "bg-[#6a9331]" : "bg-gray-400"}`}
-                          aria-label={`${motor.name} ${motorState.isOn ? "ON" : "OFF"}`}
-                        >
-                          <span className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-transform ${motorState.isOn ? "left-7" : "left-1"}`} />
-                        </button>
-                        <span className="text-xs text-gray-500">ON/OFF</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end gap-0.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (hasMqtt) toggleMotor(motor.name, idx);
+                            }}
+                            className={`relative w-14 h-8 rounded-full transition-colors ${motorState.isOn ? "bg-[#6a9331]" : "bg-gray-400"}`}
+                            aria-label={`${motor.name} ${motorState.isOn ? "ON" : "OFF"}`}
+                          >
+                            <span className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-transform ${motorState.isOn ? "left-7" : "left-1"}`} />
+                          </button>
+                          <span className="text-xs text-gray-500">ON/OFF</span>
+                        </div>
+
+                        {/* Delete button (X) for extra motors */}
+                        {!hasMqtt && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteMotor(motor.id, motor.name);
+                            }}
+                            className="flex items-center justify-center w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-full transition-colors"
+                            title="Delete Motor"
+                          >
+                            <span className="font-bold text-lg">×</span>
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -382,22 +481,22 @@ export default function DashboardPage() {
                         <div className="flex rounded-full bg-#e8f5e0-50 p-1">
                           <button
                             onClick={(e) => { e.stopPropagation(); setMotorMode(motor.id, "manual"); }}
-                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "manual" ? "bg-[#7faf3b] text-white shadow" : "text-[#2d3436] hover:bg-green-100"}`}
+                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "manual" ? "bg-[#7faf3b] text-white shadow-[5px_8px_6px_-5px_rgba(0,_0,_0,_0.8)]" : "text-[#2d3436] hover:bg-green-100"}`}
                           >
                             MANUAL
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setMotorMode(motor.id, "auto"); }}
-                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "auto" ? "bg-[#7faf3b] text-white shadow" : "text-[#2d3436] hover:bg-green-100"}`}
+                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "auto" ? "bg-[#7faf3b] text-white shadow-[5px_8px_6px_-5px_rgba(0,_0,_0,_0.8)]" : "text-[#2d3436] hover:bg-green-100"}`}
                           >
                             AUTO
                           </button>
                         </div>
 
                         {mode === "manual" ? (
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 gap-4 ">
                             {["Valve 1", "Valve 2"].map((v) => (
-                              <div key={v} className="rounded-xl bg-white/80 border border-[#b8d4a0] p-4 flex flex-col items-center gap-2">
+                              <div key={v} className="rounded-xl bg-white/80 border border-[#b8d4a0] p-4 flex flex-col items-center gap-2 shadow-[4px_7px_3px_-3px_rgba(0,_0,_0,_0.35)]">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#7faf3b] text-white">
                                   <ValveIcon className="w-6 h-6 text-white" />
                                 </div>
@@ -415,7 +514,7 @@ export default function DashboardPage() {
                         ) : (
                           <div className="grid grid-cols-2 gap-2 sm:gap-3">
                             {["Valve 1", "Valve 2"].map((v) => (
-                              <div key={v} className="rounded-xl bg-white/90 border border-[#b8d4a0] p-2 sm:p-3 flex flex-col items-center">
+                              <div key={v} className="rounded-xl bg-white/90 border border-[#b8d4a0] p-2 sm:p-3 flex flex-col items-center shadow-[4px_7px_3px_-3px_rgba(0,_0,_0,_0.35)]">
                                 {/* Valve Icon and Name */}
                                 <div className="flex flex-col items-center gap-1 mb-2">
                                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7faf3b] text-white">
@@ -510,6 +609,7 @@ export default function DashboardPage() {
           </section>
         </div>
       </main>
+
     </div>
   );
 }
