@@ -372,10 +372,10 @@ export default function MotorsPage() {
       <div className="mx-auto w-full max-w-9xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
         {/* Mode Toggle */}
         <section className="mb-6">
-          <div className="flex rounded-2xl bg-green-50 p-1">
+          <div className="flex rounded-full bg-green-50 p-1">
             <button
               onClick={setManual}
-              className={`flex-1 rounded-xl py-3 font-bold ${
+              className={`flex-1 rounded-full py-3 font-bold ${
                 mode === "manual"
                   ? "bg-green-700 text-white shadow"
                   : "text-green-700 hover:bg-green-100"
@@ -385,7 +385,7 @@ export default function MotorsPage() {
             </button>
             <button
               onClick={setAuto}
-              className={`flex-1 rounded-xl py-3 font-bold ${
+              className={`flex-1 rounded-full py-3 font-bold ${
                 mode === "auto"
                   ? "bg-green-700 text-white shadow"
                   : "text-green-700 hover:bg-green-100"
