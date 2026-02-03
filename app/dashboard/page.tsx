@@ -21,15 +21,6 @@ const MOTOR_TOPICS: Record<number, { control: string; status: string }> = {
 // Motor icon - sample (replace src with your own icon later)
 const MOTOR_ICON_SRC = "https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021968/icons8-motor-50_ooixaf.png";
 
-function ValveIcon({ className = "w-8 h-8" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 3v18M9 6l3-3 3 3M9 18l3 3 3-3" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
 export default function DashboardPage() {
   const router = useRouter();
   const [voltage, setVoltage] = useState(100);
@@ -372,20 +363,20 @@ export default function DashboardPage() {
       <header className="w-full shadow-[0px_9px_3px_-4px_rgba(0,_0,_0,_0.35)]">
         <Link href="/dashboard/weather-details" className="block relative h-40 sm:h-48 lg:h-52 w-full overflow-hidden rounded-none shadow-md mb-0 cursor-pointer hover:opacity-95 transition-opacity">
           <div className="absolute inset-0 overflow-hidden">
-            <img src="/images/main_page_top.png" alt="Farm Background" className="h-full w-full object-cover object-bottom origin-bottom scale-y-130 rounded-none " />
+            <img src="/images/main_page_top.png" alt="Farm Background" className="h-full w-full object-cover object-bottom origin-bottom scale-y-130 rounded-sm " />
           </div>
           <div className="h-full flex items-center justify-center px-4 sm:px-6 lg:px-8 relative z-10 ">
             <div className="w-full max-w-5xl lg:max-w-6xl mx-auto grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 place-items-center">
               <div className="flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2 mb-2">
-                  <img src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021601/thermometer_g3cmqb.png" alt="Temperature" className="w-8 h-8 sm:w-10 sm:h-10 opacity-80" />
+                  <img src="/images/summer.png" alt="Temperature" className="w-8 h-8 sm:w-10 sm:h-10 opacity-80" />
                   <span className="text-sm sm:text-base lg:text-lg text-black/90 font-bold">Temperature</span>
                 </div>
                 <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black">{weatherData.temperature}°C</p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2 mb-2">
-                  <img src="https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021689/icons8-rain-cloud-50_jx8pnw.png" alt="Rainfall" className="w-8 h-8 sm:w-10 sm:h-10 opacity-80" />
+                  <img src="/images/rain.png" alt="Rainfall" className="w-8 h-8 sm:w-10 sm:h-10 opacity-80" />
                   <span className="text-sm sm:text-base lg:text-lg text-black/90 font-bold">Rainfall</span>
                 </div>
                 <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black">{weatherData.rainfall} mm</p>
@@ -398,24 +389,24 @@ export default function DashboardPage() {
       <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 pb-8 sm:pt-8 sm:pb-12 lg:pt-10 lg:pb-16 ">
         <div className="max-w-5xl lg:max-w-6xl mx-auto ">
           {/* Phase Monitoring - desktop: card layout like reference */}
-          <section className="mb-8 rounded-2xl p-5 sm:p-6 lg:p-8 bg-[#d4e8c4]/60 border border-[#b8d4a0] shadow-[5px_9px_3px_-4px_rgba(0,_0,_0,_0.35)]">
-            <h2 className="text-center text-base sm:text-lg font-bold uppercase tracking-wider text-[#2d3436] mb-1">Phase Monitoring</h2>
+          <section className="mb-8 rounded-2xl p-5 sm:p-6 lg:p-8 bg-[#dcffcb]/60 border border-[#b8d4a0] shadow-[4px_4px_10px_0px_rgba(0,_0,_0,_0.8)]">
+            <h1 className="text-center text-xl sm:text-lg font-extrabold text-shadow-lg uppercase tracking-wider text-[#2d3436] mb-1">Phase Monitoring</h1>
             <p className="text-center text-xs sm:text-sm text-[#2d3436]/80 mb-4 sm:mb-6">Click on each card to view Power and Energy</p>
             <div className="flex justify-center gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 ">
               {phaseCircles.map((p) => (
-                <div key={p.id} className={`flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-white/80 border-2 ${p.borderClass} shadow-sm`}>
+                <div key={p.id} className={`flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-[#eefae6] border-3 ${p.borderClass} shadow-sm`}>
                   <span className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">{p.v}V</span>
-                  <div className="w-10 sm:w-12 border-t border-gray-200 my-1" />
+                  <div className="w-10 sm:w-12 border-t-2 border-blackmy-1" />
                   <span className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">{p.a}A</span>
                 </div>
               ))}
             </div>
-            <div className="rounded-xl p-4 bg-[#c8e0b4]/50 border border-[#b8d4a0] shadow-[0px_7px_9px_-7px_rgba(0,_0,_0,_0.35)] flex items-center justify-between gap-4">
+            <div className="rounded-3xl p-4 border border-[#dcffcb] shadow-[0px_0px_9px_-3px_rgba(0,_0,_0,_0.2)] flex items-center justify-between gap-4">
               <div>
-                <label className="text-sm font-semibold text-[#5a7c3e] underline block mb-1">Voltage & Current Threshold:</label>
+                <label className="text-sm font-semibold text-[#4f8820] block mb-1">Voltage & Current Threshold:</label>
                 <p className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">{voltage}V | {current} A</p>
               </div>
-              <button onClick={() => router.push("/dashboard/motor-control/thresholds")} className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#b8d4a0] hover:bg-[#a8c890] text-[#2d3436] transition-colors shadow-sm" aria-label="Edit thresholds">
+              <button onClick={() => router.push("/dashboard/motor-control/thresholds")} className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#90cd72] hover:bg-[#a8c890] text-[#2d3436] transition-colors shadow-sm" aria-label="Edit thresholds">
                 <PencilIcon className="w-5 h-5" />
               </button>
             </div>
@@ -423,7 +414,7 @@ export default function DashboardPage() {
 
           {/* Motor Control & Management - desktop: same card style as reference */}
           <section className="mb-10">
-            <h2 className="text-base sm:text-lg font-bold uppercase tracking-wider text-[#2d3436] mb-3 sm:mb-4">Motor Control & Management</h2>
+            <h2 className="text-base sm:text-lg font-bold uppercase text-shadow-lg tracking-wider text-[#2d3436] mb-3 sm:mb-4">Motor Control & Management</h2>
             <div className="space-y-3 sm:space-y-4">
               {motorList.map((motor, idx) => {
                 const motorState = motors[motor.name] ?? { isOn: false, onTime: "06:00", offTime: "18:00" };
@@ -451,7 +442,7 @@ export default function DashboardPage() {
                               e.stopPropagation();
                               if (hasMqtt) toggleMotor(motor.name, idx);
                             }}
-                            className={`relative w-14 h-8 rounded-full transition-colors ${motorState.isOn ? "bg-[#6a9331]" : "bg-gray-400"}`}
+                            className={`relative w-14 h-8 rounded-full transition-colors ${motorState.isOn ? "bg-[#5e970e]" : "bg-gray-400"}`}
                             aria-label={`${motor.name} ${motorState.isOn ? "ON" : "OFF"}`}
                           >
                             <span className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-transform ${motorState.isOn ? "left-7" : "left-1"}`} />
@@ -481,13 +472,13 @@ export default function DashboardPage() {
                         <div className="flex rounded-full bg-#e8f5e0-50 p-1">
                           <button
                             onClick={(e) => { e.stopPropagation(); setMotorMode(motor.id, "manual"); }}
-                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "manual" ? "bg-[#7faf3b] text-white shadow-[5px_8px_6px_-5px_rgba(0,_0,_0,_0.8)]" : "text-[#2d3436] hover:bg-green-100"}`}
+                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "manual" ? "bg-[#90cd72] text-black font-extrabold shadow-[5px_8px_6px_-5px_rgba(0,_0,_0,_0.8)]" : "text-[#2d3436] hover:bg-green-100"}`}
                           >
                             MANUAL
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setMotorMode(motor.id, "auto"); }}
-                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "auto" ? "bg-[#7faf3b] text-white shadow-[5px_8px_6px_-5px_rgba(0,_0,_0,_0.8)]" : "text-[#2d3436] hover:bg-green-100"}`}
+                            className={`flex-1 rounded-full py-2 text-sm font-bold ${mode === "auto" ? "bg-[#90cd72] text-black font-extrabold shadow-[5px_8px_6px_-5px_rgba(0,_0,_0,_0.8)]" : "text-[#2d3436] hover:bg-green-100"}`}
                           >
                             AUTO
                           </button>
@@ -496,15 +487,14 @@ export default function DashboardPage() {
                         {mode === "manual" ? (
                           <div className="grid grid-cols-2 gap-4 ">
                             {["Valve 1", "Valve 2"].map((v) => (
-                              <div key={v} className="rounded-xl bg-white/80 border border-[#b8d4a0] p-4 flex flex-col items-center gap-2 shadow-[4px_7px_3px_-3px_rgba(0,_0,_0,_0.35)]">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#7faf3b] text-white">
-                                  <ValveIcon className="w-6 h-6 text-white" />
+                              <div key={v} className="rounded-xl bg-[#f3fae8] border border-[#b8d4a0] p-4 flex flex-col items-center gap-2 shadow-[4px_7px_3px_-3px_rgba(0,_0,_0,_0.35)]">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl text-white">
+                                  <img src="/images/valve_icon.png" alt="Valve" className="w-10 h-10" />
                                 </div>
                                 <span className="text-sm font-bold text-[#2d3436]">{v}</span>
-                                <span className={`text-xs font-semibold ${valves[v]?.isOn ? "text-green-600" : "text-gray-500"}`}>{valves[v]?.isOn ? "ON" : "OFF"}</span>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleToggleValve(v); }}
-                                  className={`w-full rounded-lg py-2 text-xs font-bold ${valves[v]?.isOn ? "bg-[#7faf3b] text-white" : "bg-gray-300 text-gray-700"}`}
+                                  className={`w-16 rounded-2xl py-2 text-xs font-bold ${valves[v]?.isOn ? "bg-[#90cd72] text-black" : "bg-gray-300 text-gray-700"}`}
                                 >
                                   {valves[v]?.isOn ? "ON" : "OFF"}
                                 </button>
@@ -514,11 +504,11 @@ export default function DashboardPage() {
                         ) : (
                           <div className="grid grid-cols-2 gap-2 sm:gap-3">
                             {["Valve 1", "Valve 2"].map((v) => (
-                              <div key={v} className="rounded-xl bg-white/90 border border-[#b8d4a0] p-2 sm:p-3 flex flex-col items-center shadow-[4px_7px_3px_-3px_rgba(0,_0,_0,_0.35)]">
+                              <div key={v} className="rounded-xl bg-[#f3fae8] border border-[#b8d4a0] p-2 sm:p-3 flex flex-col items-center shadow-[4px_7px_3px_-3px_rgba(0,_0,_0,_0.35)]">
                                 {/* Valve Icon and Name */}
                                 <div className="flex flex-col items-center gap-1 mb-2">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7faf3b] text-white">
-                                    <ValveIcon className="w-4 h-4 text-white" />
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-lg text-white">
+                                    <img src="/images/valve_icon.png" alt="Valve" className="w-8 h-8" />
                                   </div>
                                   <span className="font-bold text-[#2d3436] text-xs whitespace-nowrap">{v}</span>
                                 </div>
@@ -527,7 +517,7 @@ export default function DashboardPage() {
                                 <div className="flex items-end gap-1.5 sm:gap-2 w-full mb-2">
                                   {/* Start Time */}
                                   <div className="flex-1 flex flex-col items-center min-w-0">
-                                    <label className="text-[9px] sm:text-[10px] text-gray-600 mb-1 font-medium whitespace-nowrap">
+                                    <label className="text-[11px] sm:text-[10px] text-black-600 mb-1 font-semibold whitespace-nowrap">
                                       Start Time
                                     </label>
                                     <input
@@ -535,7 +525,7 @@ export default function DashboardPage() {
                                       value={motorState.onTime}
                                       onChange={(e) => updateMotorTime(motor.name, "onTime", e.target.value)}
                                       onFocus={(e) => e.stopPropagation()}
-                                      className="w-full rounded border border-gray-300 px-1 sm:px-1.5 py-1 text-[9px] sm:text-[10px] text-center bg-white"
+                                      className="w-full rounded-xl border border-gray-300 px--5 sm:px-1.5 py-1 text-[8px] sm:text-[10px] text-center bg-white shadow-[0px_1px_4px_2px_rgba(0,_0,_0,_0.1)]"
                                     />
                                   </div>
 
@@ -544,7 +534,7 @@ export default function DashboardPage() {
 
                                   {/* End Time */}
                                   <div className="flex-1 flex flex-col items-center min-w-0">
-                                    <label className="text-[9px] sm:text-[10px] text-gray-600 mb-1 font-medium whitespace-nowrap">
+                                    <label className="text-[11px] sm:text-[10px] text-black-600 mb-1 font-semibold whitespace-nowrap">
                                       End Time
                                     </label>
                                     <input
@@ -552,7 +542,7 @@ export default function DashboardPage() {
                                       value={motorState.offTime}
                                       onChange={(e) => updateMotorTime(motor.name, "offTime", e.target.value)}
                                       onFocus={(e) => e.stopPropagation()}
-                                      className="w-full rounded border border-gray-300 px-1 sm:px-1.5 py-1 text-[9px] sm:text-[10px] text-center bg-white"
+                                      className="w-full rounded-xl border border-gray-300 px-0 sm:px-1.5 py-1 text-[8px] sm:text-[10px] text-center bg-white shadow-[0px_1px_4px_2px_rgba(0,_0,_0,_0.1)]"
                                     />
                                   </div>
                                 </div>
@@ -561,7 +551,7 @@ export default function DashboardPage() {
                                 <div className="w-full flex justify-center">
                                   <button
                                     onClick={(e) => { e.stopPropagation(); saveAuto(motor.name, idx); }}
-                                    className="w-1/2 rounded-lg py-1.5 bg-[#7faf3b] hover:bg-[#6a9331] text-white text-xs font-bold transition-colors"
+                                    className="w-1/2 rounded-2xl py-1.5 bg-[#90cd72] hover:bg-[#6a9331] text-black text-xs font-bold transition-colors"
                                   >
                                     SAVE
                                   </button>
@@ -609,7 +599,9 @@ export default function DashboardPage() {
           </section>
         </div>
       </main>
-
+      <div>
+          <img src="/images/design_img.png" alt="Footer Image" className="w-25 h-23 object-cover object-top mt-auto" />
+      </div>        
     </div>
   );
 }

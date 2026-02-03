@@ -10,35 +10,39 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace("/connect-device");
-    }, 3000);
+    }, 2500);
     return () => clearTimeout(timer);
   }, [router]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden">
-      <motion.div
-        className="relative w-full h-full flex items-center justify-center p-4"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{
-          duration: 1.2,
-          ease: [0.25, 0.46, 0.45, 0.94],
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white overflow-hidden">
+      <motion.img
+        src="/images/startpage.png"
+        alt="AgriSenseX"
+        className="max-w-[80%] object-contain"
+
+        // Start state
+        initial={{
+          scale: 2.5,
+          rotate: -25,
+          opacity: 0,
+          y: 80,
         }}
-        style={{ backgroundColor: "#f5f9f0" }} 
-      >
-        <motion.img
-          src="/images/startpage.png"
-          alt="AgriSenseX"
-          className="max-w-full max-h-full w-auto h-auto object-contain"
-          initial={{ opacity: 1.15, y: 0 }}
-          animate={{ opacity: 1, y: 1 }}
-          transition={{
-            duration: 1,
-            delay: 0.2,
-            ease: "easeOut",
-          }}
-        />
-      </motion.div>
+
+        // End state
+        animate={{
+          scale: 1,
+          rotate: 0,
+          opacity: 1,
+          y: 0,
+        }}
+
+        // Smooth cinematic timing
+        transition={{
+          duration: 1.4,
+          ease: [0.22, 1, 0.36, 1], // premium easing
+        }}
+      />
     </div>
   );
 }
