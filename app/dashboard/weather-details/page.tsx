@@ -59,7 +59,7 @@ export default function WeatherDetailsPage() {
   const [locationName, setLocationName] = useState("Erode");
 
   // for drag and drop bottom sheet functionality
-  const [translateY, setTranslateY] = useState(350);
+  const [translateY, setTranslateY] = useState(300);
   const [dragging, setDragging] = useState(false);
   const startYRef = useRef(0);
   const initialTranslateRef = useRef(350);
@@ -228,12 +228,12 @@ export default function WeatherDetailsPage() {
             if (translateY < 200) {
               setTranslateY(0);
             } else {
-              setTranslateY(325);
+              setTranslateY(300);
             }
           }}
           onPointerCancel={() => {
             setDragging(false);
-            setTranslateY(350);
+            setTranslateY(300);
           }}
         >
           {/* Drag Handle */}
