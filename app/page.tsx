@@ -9,7 +9,7 @@ export default function Home() {
 
   useEffect(() => {
     const handleVideoEnd = () => {
-      router.replace("/dashboard");
+      router.replace("/connect-device");
     };
 
     const videoElement = videoRef.current;
