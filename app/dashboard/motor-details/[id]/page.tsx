@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { PencilIcon, PlusIcon } from "@heroicons/react/24/solid";
-import { subscribeToTopic, publishMessage } from "../../lib/mqttClient";
+import { subscribeToTopic, publishMessage } from "../../../../lib/mqttClient";
 
 type PhaseValues = { v: number; i: number; p: number; e: number };
 type MotorState = { isOn: boolean; onTime: string; offTime: string };
@@ -28,8 +28,10 @@ const MOTOR_TOPICS: Record<number, { control: string; status: string }> = {
 const MOTOR_ICON_SRC =
   "https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021968/icons8-motor-50_ooixaf.png";
 
-export default function DashboardPage() {
+export default function MotorDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const motorId = typeof params?.id === 'string' ? params.id : '';
   const [voltage, setVoltage] = useState(100);
   const [current, setCurrent] = useState(11.0);
   const [isModeConnected, setIsModeConnected] = useState(false);
@@ -109,7 +111,6 @@ export default function DashboardPage() {
     motor1: "manual",
     motor2: "manual",
   });
-  const [viewMode, setViewMode] = useState<"manual" | "auto">("manual");
 
   const [weatherData, setWeatherData] = useState({
     temperature: 21,
@@ -500,140 +501,231 @@ export default function DashboardPage() {
 
       <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 pb-8 sm:pt-8 sm:pb-12 lg:pt-10 lg:pb-16 ">
         <div className="max-w-5xl lg:max-w-6xl mx-auto ">
-          <h2 className="text-xl sm:text-2xl font-extrabold uppercase tracking-wider text-[#1a1d1e] mb-6 text-center sm:text-left drop-shadow-sm">
-            MOTOR CONTROL & MANAGEMENT
-          </h2>
-
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-[0px_10px_20px_rgba(0,0,0,0.1)] border border-[#e0f0d5]">
-            {/* Global Manual / Auto Switch */}
-            <div className="flex justify-center mb-8">
-              <div className="bg-[#eefae6] p-1.5 rounded-full flex w-full max-w-sm shadow-inner box-border border border-[#dcecc4]">
-                <button
-                  onClick={() => setViewMode("manual")}
-                  className={`flex-1 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300 ${viewMode === "manual" ? "bg-[#b6e496] text-[#1a1c19] shadow-md transform scale-105" : "text-gray-500 hover:text-gray-700"}`}
+          {/* Phase Monitoring - desktop: card layout like reference */}
+          <section className="mb-8 rounded-2xl p-5 sm:p-6 lg:p-8 bg-[#dcffcb]/60 border border-[#b8d4a0] shadow-[4px_4px_10px_0px_rgba(0,_0,_0,_0.8)]">
+            <h1 className="text-center text-xl sm:text-lg font-extrabold text-shadow-lg uppercase tracking-wider text-[#2d3436] mb-1">
+              Phase Monitoring
+            </h1>
+            <p className="text-center text-xs sm:text-sm text-[#2d3436]/80 mb-4 sm:mb-6">
+              Click on each card to view Power and Energy
+            </p>
+            <div className="flex justify-center gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 ">
+              {phaseCircles.map((p) => (
+                <div
+                  key={p.id}
+                  className={`flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-[#eefae6] border-3 ${p.borderClass} shadow-sm`}
                 >
-                  MANUAL
-                </button>
-                <button
-                  onClick={() => setViewMode("auto")}
-                  className={`flex-1 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300 ${viewMode === "auto" ? "bg-[#b6e496] text-[#1a1c19] shadow-md transform scale-105" : "text-gray-500 hover:text-gray-700"}`}
-                >
-                  AUTO
-                </button>
+                  <span className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">
+                    {p.v}V
+                  </span>
+                  <div className="w-10 sm:w-12 border-t-2 border-blackmy-1" />
+                  <span className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">
+                    {p.a}A
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-3xl p-4 border border-[#dcffcb] shadow-[0px_0px_9px_-3px_rgba(0,_0,_0,_0.2)] flex items-center justify-between gap-4">
+              <div>
+                <label className="text-sm font-semibold text-[#4f8820] block mb-1">
+                  Voltage & Current Threshold:
+                </label>
+                <p className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">
+                  {voltage}V | {current} A
+                </p>
               </div>
-            </div>
-
-            {/* Motor Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 lg:gap-8">
-              {motorList.map((motor, idx) => {
-                const motorState = motors[motor.name] ?? {
-                  isOn: false,
-                  onTime: "06:00",
-                  offTime: "18:00",
-                };
-                const hasMqtt = idx < 2;
-
-                return (
-                  <div
-                    key={motor.id}
-                    className="bg-[#f0f9e8] rounded-3xl p-6 border border-[#d4e8c4] flex flex-col items-center shadow-[0_8px_16px_-6px_rgba(0,0,0,0.1)] hover:shadow-xl transition-shadow duration-300 relative"
-                  >
-                    <Link href={`/dashboard/motor-details/${motor.id}`}>
-                      <h3 className="text-lg font-bold text-[#1a1d1e] mb-0 hover:underline cursor-pointer">
-                        {motor.name}
-                      </h3>
-                    </Link>
-
-                    <div className="w-24 h-24 mb-0 relative drop-shadow-md">
-                      <img
-                        src="/images/motor.png"
-                        alt={motor.name}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-
-                    {viewMode === "manual" ? (
-                      <div className="w-full flex justify-center mt-1">
-                        <button
-                          onClick={(e) => {
-                            if (hasMqtt) toggleMotor(motor.name, idx);
-                          }}
-                          className={`px-5 py-2 rounded-full font-bold text-sm tracking-wider shadow-md transition-all active:scale-95 ${motorState.isOn ? "bg-gradient-to-r from-green-500 to-green-600 text-white" : "bg-[#d1d5db] text-gray-600"}`}
-                        >
-                          {motorState.isOn ? "ON" : "OFF"}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="w-full space-y-3 flex flex-col">
-                        {/* Time Row */}
-                        <div className="flex items-end justify-between w-full">
-                          {/* Start Time */}
-                          <div className="flex flex-col w-[45%]">
-                            <label className="text-xs font-semibold text-gray-700 mb-1">
-                              Start
-                            </label>
-                            <input
-                              type="time"
-                              value={motorState.onTime}
-                              onChange={(e) =>
-                                updateMotorTime(
-                                  motor.name,
-                                  "onTime",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-full h-10 px-2 rounded-lg border border-gray-300 bg-white text-xs font-mono focus:ring-2 focus:ring-green-400 outline-none"
-                            />
-                          </div>
-
-                          {/* Divider */}
-                          <div className="w-px h-10 bg-gray-400 mx-2" />
-
-                          {/* End Time */}
-                          <div className="flex flex-col w-[45%]">
-                            <label className="text-xs font-semibold text-gray-700 mb-1">
-                              End
-                            </label>
-                            <input
-                              type="time"
-                              value={motorState.offTime}
-                              onChange={(e) =>
-                                updateMotorTime(
-                                  motor.name,
-                                  "offTime",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-full h-10 px-2 rounded-lg border border-gray-300 bg-white text-xs font-mono focus:ring-2 focus:ring-green-400 outline-none"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Save Button */}
-                        <button
-                          onClick={() => saveAuto(motor.name, idx)}
-                          className="w-full rounded-xl py-2.5 text-sm font-bold bg-green-600 text-white hover:bg-green-700 shadow-md"
-                        >
-                          SAVE
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex justify-end mt-4">
               <button
-                onClick={addMotor}
-                className="bg-black hover:bg-gray-800 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-110"
+                onClick={() =>
+                  router.push("/dashboard/motor-control/thresholds")
+                }
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#90cd72] hover:bg-[#a8c890] text-[#2d3436] transition-colors shadow-sm"
+                aria-label="Edit thresholds"
               >
-                <PlusIcon className="w-6 h-6" />
+                <PencilIcon className="w-5 h-5" />
               </button>
             </div>
+          </section>
+
+          {/* Motor Control & Management - Detailed View */}
+          <section className="mb-10">
+            <h2 className="text-base sm:text-lg font-bold uppercase text-shadow-lg tracking-wider text-[#2d3436] mb-3 sm:mb-4">
+              Motor Control & Management
+            </h2>
+
+            {(() => {
+              // Find the motor
+              const currentMotor = motorList.find(m => m.id === motorId) || motorList[0];
+              if (!currentMotor) return <div>Motor not found</div>;
+
+              const motor = currentMotor;
+              const idx = motorList.findIndex(m => m.id === motor.id);
+              const motorState = motors[motor.name] ?? {
+                isOn: false,
+                onTime: "06:00",
+                offTime: "18:00",
+              };
+              const mode = motorModes[motor.id] ?? "manual";
+              const hasMqtt = idx < 2;
+
+              return (
+                <div
+                  key={motor.id}
+                  className="rounded-2xl border border-[#b8d4a0] bg-[#e8f5e0]/50 shadow-[0px_8px_13px_-5px_rgba(0,_0,_0,_0.35)] overflow-hidden p-4"
+                >
+                  {/* Header: Name + Edit + Toggle */}
+                  <div className="flex items-center justify-between mb-4">
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl text-white overflow-hidden">
+                        <img
+                          src="/images/electric-motor.png"
+                          alt=""
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl font-bold text-[#2d3436]">
+                          {motor.name}
+                        </span>
+                        <PencilIcon className="w-4 h-4 text-gray-500 cursor-pointer" />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-0.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (hasMqtt) toggleMotor(motor.name, idx);
+                        }}
+                        className={`relative w-14 h-8 rounded-full transition-colors ${motorState.isOn ? "bg-[#5e970e]" : "bg-gray-400"}`}
+                      >
+                        <span
+                          className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-transform ${motorState.isOn ? "left-7" : "left-1"}`}
+                        />
+                      </button>
+                      <span className="text-[10px] text-gray-500 font-bold uppercase">{motorState.isOn ? "ON" : "OFF"}</span>
+                    </div>
+                  </div>
+
+                  {/* Manual / Auto Tabs */}
+                  <div className="flex rounded-full bg-[#dcecd4] p-1 mb-6 max-w-md mx-auto">
+                    <button
+                      onClick={() => setMotorMode(motor.id, "manual")}
+                      className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${mode === "manual" ? "bg-[#90cd72] text-black shadow-md border border-[#7faf3b]" : "text-[#5c6b54] hover:bg-[#c9e0bd]"}`}
+                    >
+                      MANUAL
+                    </button>
+                    <button
+                      onClick={() => setMotorMode(motor.id, "auto")}
+                      className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${mode === "auto" ? "bg-[#90cd72] text-black shadow-md border border-[#7faf3b]" : "text-[#5c6b54] hover:bg-[#c9e0bd]"}`}
+                    >
+                      AUTO
+                    </button>
+                  </div>
+
+                  {/* Content (Valves) */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {["Valve 1", "Valve 2"].map((v) => {
+                      // Valve State Check
+                      const isValveOn = valves[v]?.isOn;
+
+                      return (
+                        <div
+                          key={v}
+                          className="rounded-xl bg-[#f3fae8] border border-[#b8d4a0] p-4 flex flex-col items-center gap-3 shadow-[4px_7px_3px_-3px_rgba(0,_0,_0,_0.35)] relative"
+                        >
+                          {mode === "manual" ? (
+                            <>
+                              <div className="flex h-14 w-14 items-center justify-center rounded-xl text-white">
+                                <img
+                                  src="/images/valve_icon.png"
+                                  alt="Valve"
+                                  className="w-12 h-12"
+                                />
+                              </div>
+                              <span className="text-sm font-bold text-[#2d3436]">
+                                {v}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleValve(v);
+                                }}
+                                className={`w-20 rounded-2xl py-2 text-xs font-bold transition-colors ${isValveOn ? "bg-[#90cd72] text-black" : "bg-gray-300 text-gray-700"}`}
+                              >
+                                {isValveOn ? "ON" : "OFF"}
+                              </button>
+                            </>
+                          ) : (
+                            // AUTO MODE for Valve
+                            <>
+                              <div className="flex flex-col items-center gap-1 mb-1">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl text-white">
+                                  <img
+                                    src="/images/valve_icon.png"
+                                    alt="Valve"
+                                    className="w-8 h-8"
+                                  />
+                                </div>
+                                <span className="text-xs font-bold text-[#2d3436]">
+                                  {v}
+                                </span>
+                              </div>
+
+                              <div className="w-full flex items-center justify-between gap-2">
+                                <div className="flex flex-col gap-1 w-full">
+                                  <label className="text-[10px] font-bold text-[#4f8820]">Start Time</label>
+                                  <input
+                                    type="time"
+                                    value={motorState.onTime}
+                                    onChange={(e) => updateMotorTime(motor.name, "onTime", e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 px-1 py-1 text-[10px] text-center bg-white shadow-sm"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1 w-full">
+                                  <label className="text-[10px] font-bold text-[#4f8820]">End Time</label>
+                                  <input
+                                    type="time"
+                                    value={motorState.offTime}
+                                    onChange={(e) => updateMotorTime(motor.name, "offTime", e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 px-1 py-1 text-[10px] text-center bg-white shadow-sm"
+                                  />
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveAuto(motor.name, idx);
+                                }}
+                                className="mt-2 w-full rounded-full py-1.5 bg-[#557b44] hover:bg-[#466638] text-white text-[10px] font-bold shadow-md transition-colors"
+                              >
+                                SAVE
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+          </section>
+
+          {/* Add Button - keeping it just in case, or removing if not needed in detail view. Image 2 has a + button in bottom right. */}
+          <div className="fixed bottom-6 right-6 z-50">
+            <button
+              onClick={addMotor}
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-lg hover:scale-110 transition-transform"
+            >
+              <PlusIcon className="w-8 h-8" />
+            </button>
           </div>
+
+
         </div>
-      </main>
+      </main >
       <div>
         <img
           src="/images/design_img.png"
@@ -641,6 +733,6 @@ export default function DashboardPage() {
           className="w-25 h-23 object-cover object-top mt-auto"
         />
       </div>
-    </div>
+    </div >
   );
 }
