@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { PencilIcon, PlusIcon } from "@heroicons/react/24/solid";
-import { subscribeToTopic, publishMessage } from "../../lib/mqttClient";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { PencilIcon, PlusIcon, ArrowLeftIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { subscribeToTopic, publishMessage } from "../../../../lib/mqttClient";
 
 type PhaseValues = { v: number; i: number; p: number; e: number };
 type MotorState = { isOn: boolean; onTime: string; offTime: string };
@@ -28,8 +28,10 @@ const MOTOR_TOPICS: Record<number, { control: string; status: string }> = {
 const MOTOR_ICON_SRC =
   "https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021968/icons8-motor-50_ooixaf.png";
 
-export default function DashboardPage() {
+export default function MotorDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const motorId = typeof params?.id === 'string' ? params.id : '';
   const [voltage, setVoltage] = useState(100);
   const [current, setCurrent] = useState(11.0);
   const [isModeConnected, setIsModeConnected] = useState(false);
@@ -66,30 +68,12 @@ export default function DashboardPage() {
       ];
     },
   );
-
   const [expandedMotor, setExpandedMotor] = useState<string | null>(null);
   const [motorModes, setMotorModes] = useState<
     Record<string, "manual" | "auto">
-  >(() => {
-    if (typeof window !== "undefined") {
-      const savedList = localStorage.getItem("motorList");
-      const savedModes = localStorage.getItem("motorModes");
-      if (savedList && savedModes) {
-        try {
-          return JSON.parse(savedModes);
-        } catch (e) {
-          console.error("Error loading motor modes:", e);
-        }
-      }
-    }
-    return { motor1: "manual", motor2: "manual" };
-  });
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("motorModes", JSON.stringify(motorModes));
-    }
-  }, [motorModes]);
+  >({ motor1: "manual", motor2: "manual" });
+  const [editingMotorId, setEditingMotorId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
   const [motors, setMotors] = useState<Record<string, MotorState>>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("motors");
@@ -125,7 +109,10 @@ export default function DashboardPage() {
   });
   const lastOnValve = useRef<"V1" | "V2">("V1");
   const autoTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const modeRef = useRef<Record<string, "manual" | "auto">>(motorModes);
+  const modeRef = useRef<Record<string, "manual" | "auto">>({
+    motor1: "manual",
+    motor2: "manual",
+  });
 
   const [weatherData, setWeatherData] = useState({
     temperature: 21,
@@ -280,18 +267,11 @@ export default function DashboardPage() {
 
   const toggleMotor = (name: string, index: number) => {
     setMotors((p) => {
-      const currentMotor = p[name] || {
-        isOn: false,
-        onTime: "06:00",
-        offTime: "18:00",
-      };
-      const updated = {
-        ...p,
-        [name]: { ...currentMotor, isOn: !currentMotor.isOn },
-      };
+      const currentMotor = p[name] || { isOn: false, onTime: "06:00", offTime: "18:00" };
+      const updated = { ...p, [name]: { ...currentMotor, isOn: !currentMotor.isOn } };
       if (typeof window !== "undefined")
         localStorage.setItem("motors", JSON.stringify(updated));
-
+      
       const topic = MOTOR_TOPICS[index]?.control;
       if (topic) {
         const isOn = updated[name].isOn;
@@ -304,7 +284,7 @@ export default function DashboardPage() {
   const handleToggleValve = (name: string) => {
     const valveKey = name === "Valve 1" ? "V1" : "V2";
     setValves((prev) => {
-      const current = prev[name] || { isOn: false };
+      const current = prev[name];
       const newIsOn = !current.isOn;
       if (!newIsOn) {
         const onCount = Object.values(prev).filter((v) => v.isOn).length;
@@ -331,11 +311,7 @@ export default function DashboardPage() {
     v: string,
   ) => {
     setMotors((p) => {
-      const currentMotor = p[name] || {
-        isOn: false,
-        onTime: "06:00",
-        offTime: "18:00",
-      };
+      const currentMotor = p[name] || { isOn: false, onTime: "06:00", offTime: "18:00" };
       const updated = { ...p, [name]: { ...currentMotor, [field]: v } };
       if (typeof window !== "undefined")
         localStorage.setItem("motors", JSON.stringify(updated));
@@ -369,95 +345,66 @@ export default function DashboardPage() {
     }
   };
 
-  const addMotorBlock = () => {
+  const updateMotorName = (id: string, oldName: string, newName: string) => {
+    if (!newName.trim()) return;
     setMotorList((prev) => {
-      const n1 = prev.length + 1;
-      const n2 = prev.length + 2;
-      const newName1 = `Motor ${n1}`;
-      const newName2 = `Motor ${n2}`;
-      const newId1 = `motor_custom_${Date.now()}_1`;
-      const newId2 = `motor_custom_${Date.now()}_2`;
-
-      const updated = [
-        ...prev,
-        { id: newId1, name: newName1 },
-        { id: newId2, name: newName2 },
-      ];
+      const updated = prev.map((m) => (m.id === id ? { ...m, name: newName } : m));
       if (typeof window !== "undefined")
         localStorage.setItem("motorList", JSON.stringify(updated));
-      
-      setMotors((prevMotors) => {
-        const updatedMotors = {
-          ...prevMotors,
-          [newName1]: { isOn: false, onTime: "06:00", offTime: "18:00" },
-          [newName2]: { isOn: false, onTime: "06:00", offTime: "18:00" },
-        };
-        if (typeof window !== "undefined")
-          localStorage.setItem("motors", JSON.stringify(updatedMotors));
-        return updatedMotors;
-      });
-
-      setMotorModes((prevModes) => {
-        const updatedModes: Record<string, "manual" | "auto"> = {
-          ...prevModes,
-          [newId1]: "manual",
-          [newId2]: "manual",
-        };
-        if (typeof window !== "undefined")
-          localStorage.setItem("motorModes", JSON.stringify(updatedModes));
-        return updatedModes;
-      });
-
       return updated;
     });
-  };
-
-  const removeMotorBlock = () => {
-    if (motorList.length <= 2) return; // Keep at least one block
-
-    setMotorList((prev) => {
-      const updated = prev.slice(0, -2);
-      const removed = prev.slice(-2);
-      
+    setMotors((prev) => {
+      const updated = { ...prev };
+      if (updated[oldName]) {
+        updated[newName] = updated[oldName];
+        delete updated[oldName];
+      }
       if (typeof window !== "undefined")
-        localStorage.setItem("motorList", JSON.stringify(updated));
-
-      setMotors((prevMotors) => {
-        const updatedMotors = { ...prevMotors };
-        removed.forEach(m => delete updatedMotors[m.name]);
-        if (typeof window !== "undefined")
-          localStorage.setItem("motors", JSON.stringify(updatedMotors));
-        return updatedMotors;
-      });
-
-      setMotorModes((prevModes) => {
-        const updatedModes: Record<string, "manual" | "auto"> = { ...prevModes };
-        removed.forEach(m => delete updatedModes[m.id]);
-        if (typeof window !== "undefined")
-          localStorage.setItem("motorModes", JSON.stringify(updatedModes));
-        return updatedModes;
-      });
-
+        localStorage.setItem("motors", JSON.stringify(updated));
       return updated;
     });
+    setEditingMotorId(null);
   };
 
-  const deleteMotor = (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete ${name}?`)) {
-      setMotorList((prev) => {
-        const updated = prev.filter((m) => m.id !== id);
-        if (typeof window !== "undefined")
-          localStorage.setItem("motorList", JSON.stringify(updated));
-        return updated;
-      });
-      setMotors((prev) => {
-        const updated = { ...prev };
-        delete updated[name];
-        if (typeof window !== "undefined")
-          localStorage.setItem("motors", JSON.stringify(updated));
-        return updated;
-      });
+  const addMotor = () => {
+    let n = 1;
+    while (motorList.some((m) => m.name === `Motor ${n}`)) {
+      n++;
     }
+    const newName = `Motor ${n}`;
+    const newId = `motor${Date.now()}`;
+    const newMotor = { id: newId, name: newName };
+    const updatedList = [...motorList, newMotor];
+    setMotorList(updatedList);
+    if (typeof window !== "undefined")
+      localStorage.setItem("motorList", JSON.stringify(updatedList));
+
+    setMotors((prev) => {
+      const updated = {
+        ...prev,
+        [newName]: { isOn: false, onTime: "06:00", offTime: "18:00" },
+      };
+      if (typeof window !== "undefined")
+        localStorage.setItem("motors", JSON.stringify(updated));
+      return updated;
+    });
+
+    setMotorModes((prev) => ({ ...prev, [newId]: "manual" }));
+  };
+
+  const removeMotor = (id: string, name: string) => {
+    const updatedList = motorList.filter((m) => m.id !== id);
+    setMotorList(updatedList);
+    if (typeof window !== "undefined")
+      localStorage.setItem("motorList", JSON.stringify(updatedList));
+
+    setMotors((prev) => {
+      const updated = { ...prev };
+      delete updated[name];
+      if (typeof window !== "undefined")
+        localStorage.setItem("motors", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   useEffect(() => {
@@ -511,6 +458,21 @@ export default function DashboardPage() {
       style={{ backgroundColor: "#eefae6" }}
     >
       {/* Top weather banner - desktop: centered content */}
+      <header className="sticky top-0 z-50 bg-white shadow-sm px-4 py-3 flex items-center gap-4">
+        <button 
+          onClick={() => router.push('/dashboard')}
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
+        </button>
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-[#90cd72] rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xl">A</span>
+          </div>
+          <span className="font-bold text-xl text-gray-800">AgriSenseX</span>
+        </Link>
+      </header>
+
       <header className="w-full shadow-[0px_9px_3px_-4px_rgba(0,0,0,0.35)]">
         <Link
           href="/dashboard/weather-details"
@@ -577,124 +539,221 @@ export default function DashboardPage() {
 
       <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 pb-8 sm:pt-8 sm:pb-12 lg:pt-10 lg:pb-16 ">
         <div className="max-w-5xl lg:max-w-6xl mx-auto ">
-          <h2 className="text-l sm:text-3xl font-extrabold uppercase tracking-wider text-[#1a1d1e] mb-6 text-center sm:text-left drop-shadow-sm">
-            MOTOR CONTROL & MANAGEMENT
-          </h2>
-
-          <div className="space-y-6 relative">
-            {/* Motor Blocks - Each pair in its own card */}
-            {Array.from({ length: Math.ceil(motorList.length / 2) }).map((_, blockIdx) => {
-              const motorsInBlock = motorList.slice(blockIdx * 2, blockIdx * 2 + 2);
-              const firstMotorId = motorsInBlock[0]?.id;
-              const currentBlockMode = motorModes[firstMotorId] || "manual";
-
-              const setBlockMode = (newMode: "manual" | "auto") => {
-                setMotorModes((prev) => {
-                  const next: Record<string, "manual" | "auto"> = { ...prev };
-                  motorsInBlock.forEach((m, i) => {
-                    next[m.id] = newMode;
-                    if (newMode === "manual") {
-                      const motorIdx = blockIdx * 2 + i;
-                      const topic = MOTOR_TOPICS[motorIdx]?.control;
-                      if (topic) publishMessage(topic, "MANUAL");
-                    }
-                  });
-                  return next;
-                });
-                
-                if (newMode === "manual" && autoTimerRef.current) {
-                  clearInterval(autoTimerRef.current);
-                  autoTimerRef.current = null;
+          {/* Phase Monitoring - desktop: card layout like reference */}
+          <section className="mb-8 rounded-2xl p-5 sm:p-6 lg:p-8 bg-[#dcffcb]/60 border border-[#b8d4a0] shadow-[4px_4px_10px_0px_rgba(0,0,0,0.8)]">
+            <h1 className="text-center text-xl sm:text-lg font-extrabold text-shadow-lg uppercase tracking-wider text-[#2d3436] mb-1">
+              Phase Monitoring
+            </h1>
+            <p className="text-center text-xs sm:text-sm text-[#2d3436]/80 mb-4 sm:mb-6">
+              Click on each card to view Power and Energy
+            </p>
+            <div className="flex justify-center gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 ">
+              {phaseCircles.map((p) => (
+                <div
+                  key={p.id}
+                  className={`flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-[#eefae6] border-3 ${p.borderClass} shadow-sm`}
+                >
+                  <span className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">
+                    {p.v}V
+                  </span>
+                  <div className="w-10 sm:w-12 border-t-2 border-blackmy-1" />
+                  <span className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">
+                    {p.a}A
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-3xl p-4 border border-[#dcffcb] shadow-[0px_0px_9px_-3px_rgba(0,0,0,0.2)] flex items-center justify-between gap-4">
+              <div>
+                <label className="text-sm font-semibold text-[#4f8820] block mb-1">
+                  Voltage & Current Threshold:
+                </label>
+                <p className="text-base sm:text-lg font-mono font-bold text-[#2d3436]">
+                  {voltage}V | {current} A
+                </p>
+              </div>
+              <button
+                onClick={() =>
+                  router.push("/dashboard/motor-control/thresholds")
                 }
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#90cd72] hover:bg-[#a8c890] text-[#2d3436] transition-colors shadow-sm"
+                aria-label="Edit thresholds"
+              >
+                <PencilIcon className="w-5 h-5" />
+              </button>
+            </div>
+          </section>
+
+          {/* Motor Control & Management - Detailed View */}
+          <section className="mb-10">
+            <h2 className="text-base sm:text-lg font-bold uppercase text-shadow-lg tracking-wider text-[#2d3436] mb-3 sm:mb-4">
+              Motor Control & Management
+            </h2>
+
+            {(() => {
+              // Find the motor
+              const currentMotor = motorList.find(m => m.id === motorId) || motorList[0];
+              if (!currentMotor) return <div>Motor not found</div>;
+
+              const motor = currentMotor;
+              const idx = motorList.findIndex(m => m.id === motor.id);
+              const motorState = motors[motor.name] ?? {
+                isOn: false,
+                onTime: "06:00",
+                offTime: "18:00",
               };
+              const mode = motorModes[motor.id] ?? "manual";
 
               return (
-                <div key={blockIdx} className="bg-white rounded-3xl p-6 sm:p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 relative space-y-6">
-                  {/* Local Manual / Auto Toggle */}
-                  <div className="flex justify-center">
-                    <div className="bg-[#f7fdf4] p-1 rounded-full flex w-full max-w-[280px] shadow-sm border border-[#e8f5e1]">
+                <div
+                  key={motor.id}
+                  className="rounded-2xl border border-[#b8d4a0] bg-[#e8f5e0]/50 shadow-[0px_8px_13px_-5px_rgba(0,0,0,0.35)] overflow-hidden p-4"
+                >
+                  {/* Header: Name + Edit + Toggle */}
+                  <div className="flex items-center justify-between mb-0.5">
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl text-white overflow-hidden">
+                        <img
+                          src="/images/electric-motor.png"
+                          alt=""
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {editingMotorId === motor.id ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="text"
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              className="text-xl font-bold text-[#2d3436] bg-white border border-[#90cd72] rounded px-1 py-0.5 outline-none w-32"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => updateMotorName(motor.id, motor.name, editingName)}
+                              className="p-1 bg-[#90cd72] text-white rounded hover:bg-[#7faf3b]"
+                            >
+                              <CheckIcon className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => setEditingMotorId(null)}
+                              className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                            >
+                              <XMarkIcon className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="text-xl font-bold text-[#2d3436]">
+                              {motor.name}
+                            </span>
+                            <PencilIcon 
+                              className="w-4 h-4 text-gray-500 cursor-pointer hover:text-[#90cd72]" 
+                              onClick={() => {
+                                setEditingName(motor.name);
+                                setEditingMotorId(motor.id);
+                              }}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-0.5">
                       <button
-                        onClick={() => setBlockMode("manual")}
-                        className={`flex-1 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
-                          currentBlockMode === "manual" 
-                          ? "bg-[#b6e496] text-black shadow-md" 
-                          : "text-gray-400"
-                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMotor(motor.name, idx);
+                        }}
+                        className={`relative w-14 h-8 rounded-full transition-colors ${motorState.isOn ? "bg-[#5e970e]" : "bg-gray-400"}`}
                       >
-                        MANUAL
+                        <span
+                          className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-transform ${motorState.isOn ? "left-7" : "left-1"}`}
+                        />
                       </button>
-                      <button
-                        onClick={() => setBlockMode("auto")}
-                        className={`flex-1 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
-                          currentBlockMode === "auto" 
-                          ? "bg-[#b6e496] text-black shadow-md" 
-                          : "text-gray-400"
-                        }`}
-                      >
-                        AUTO
-                      </button>
+                      <span className="text-[10px] text-gray-500 font-bold uppercase">{motorState.isOn ? "ON" : "OFF"}</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                    {motorsInBlock.map((motor, idxInBlock) => {
-                      const idx = blockIdx * 2 + idxInBlock;
-                      const motorState = motors[motor.name] ?? {
-                        isOn: false,
-                        onTime: "06:00",
-                        offTime: "18:00",
-                      };
+                  {/* Manual / Auto Tabs */}
+                  <div className="flex rounded-full bg-[#dcecd4] p-1 mb-1.5 max-w-md mx-auto">
+                    <button
+                      onClick={() => setMotorMode(motor.id, "manual")}
+                      className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${mode === "manual" ? "bg-[#90cd72] text-black shadow-md border border-[#7faf3b]" : "text-[#5c6b54] hover:bg-[#c9e0bd]"}`}
+                    >
+                      MANUAL
+                    </button>
+                    <button
+                      onClick={() => setMotorMode(motor.id, "auto")}
+                      className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${mode === "auto" ? "bg-[#90cd72] text-black shadow-md border border-[#7faf3b]" : "text-[#5c6b54] hover:bg-[#c9e0bd]"}`}
+                    >
+                      AUTO
+                    </button>
+                  </div>
+
+                  {/* Content (Valves) */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {["Valve 1", "Valve 2"].map((v) => {
+                      // Valve State Check
+                      const isValveOn = valves[v]?.isOn;
 
                       return (
                         <div
-                          key={motor.id}
-                          className="bg-[#eaf8e1] rounded-[32px] p-2 sm:p-3 flex flex-col items-center shadow-sm hover:shadow-md transition-shadow duration-300"
+                          key={v}
+                          className="rounded-xl bg-[#f3fae8] border border-[#b8d4a0] p-2 flex flex-col items-center gap-0 shadow-[4px_7px_3px_-3px_rgba(0,0,0,0.35)] relative"
                         >
-                          <div 
-                            className="flex flex-col items-center cursor-pointer w-full"
-                            onClick={() => router.push(`/dashboard/motor-details/${motor.id}`)}
-                          >
-                            <h3 className="text-lg sm:text-xl font-bold text-black mb-0">
-                              {motor.name}
-                            </h3>
-
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 mb-0">
-                              <img
-                                src="/images/motor.png"
-                                alt={motor.name}
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                          </div>
-
-                          {currentBlockMode === "manual" ? (
-                            <button
-                              onClick={() => {
-                                toggleMotor(motor.name, idx);
-                              }}
-                              className={`w-full max-w-[100px] py-1 rounded-full font-bold text-xs shadow-sm transition-all active:scale-95 ${
-                                motorState.isOn 
-                                ? "bg-[#b6e496] text-black" 
-                                : "bg-[#bcbcbc] text-black"
-                              }`}
-                            >
-                              {motorState.isOn ? "ON" : "OFF"}
-                            </button>
+                          {mode === "manual" ? (
+                            <>
+                              <div className="flex h-14 w-14 items-center justify-center rounded-xl text-white">
+                                <img
+                                  src="/images/valve_icon.png"
+                                  alt="Valve"
+                                  className="w-12 h-12"
+                                />
+                              </div>
+                              <span className="text-sm font-bold text-[#2d3436]">
+                                {v}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleValve(v);
+                                }}
+                                className={`w-20 rounded-2xl py-2 text-xs font-bold transition-colors ${isValveOn ? "bg-[#90cd72] text-black" : "bg-gray-300 text-gray-700"}`}
+                              >
+                                {isValveOn ? "ON" : "OFF"}
+                              </button>
+                            </>
                           ) : (
-                            <div className="w-full flex flex-col items-center">
-                              <div className="w-full flex items-center justify-between gap-1 mb-0">
+                            // AUTO MODE for Valve
+                            <>
+                              <div className="flex flex-col items-center gap-0 mb-0">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-xl text-white">
+                                  <img
+                                    src="/images/valve_icon.png"
+                                    alt="Valve"
+                                    className="w-6 h-6"
+                                  />
+                                </div>
+                                <span className="text-[10px] font-bold text-[#2d3436]">
+                                  {v}
+                                </span>
+                              </div>
+
+                              <div className="w-full flex items-center justify-between gap-1">
                                 <div className="flex flex-col gap-0 w-full">
                                   <label className="text-[9px] font-bold text-[#4f8820]">Start Time</label>
                                   <input
                                     type="time"
                                     value={motorState.onTime}
                                     onChange={(e) => updateMotorTime(motor.name, "onTime", e.target.value)}
-                                    className="w-full rounded-md border border-gray-300 px-0.5 py-0.5 text-[9px] text-center bg-white shadow-sm outline-none"
+                                    className="w-full rounded-md border border-gray-300 px-0.5 py-0.5 text-[9px] text-center bg-white shadow-sm"
                                   />
                                 </div>
-                                
+
                                 {/* Vertical Divider */}
-                                <div className="w-[1.5px] h-8 bg-black mt-3 self-center" />
+                                <div className="w-px h-8 bg-black mt-3 self-center" />
 
                                 <div className="flex flex-col gap-0 w-full">
                                   <label className="text-[9px] font-bold text-[#4f8820]">End Time</label>
@@ -702,50 +761,33 @@ export default function DashboardPage() {
                                     type="time"
                                     value={motorState.offTime}
                                     onChange={(e) => updateMotorTime(motor.name, "offTime", e.target.value)}
-                                    className="w-full rounded-md border border-gray-300 px-0.5 py-0.5 text-[9px] text-center bg-white shadow-sm outline-none"
+                                    className="w-full rounded-md border border-gray-300 px-0.5 py-0.5 text-[9px] text-center bg-white shadow-sm"
                                   />
                                 </div>
                               </div>
+
                               <button
-                                onClick={() => saveAuto(motor.name, idx)}
-                                className="w-[60px] mt-1 rounded-full py-1 bg-[#557b44] hover:bg-[#466638] text-white text-[9px] font-bold shadow-md transition-colors mx-auto"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveAuto(motor.name, idx);
+                                }}
+                                className="mt-1 w-[60px] rounded-full py-1 bg-[#557b44] hover:bg-[#466638] text-white text-[9px] font-bold shadow-md transition-colors mx-auto"
                               >
                                 SAVE
                               </button>
-                            </div>
+                            </>
                           )}
                         </div>
                       );
                     })}
                   </div>
+                </div>
+              );
+            })()}
+          </section>
 
-                {/* Controls - Aligned Side-by-Side */}
-                {blockIdx === Math.ceil(motorList.length / 2) - 1 && (
-                  <div className="absolute bottom-4 right-4 flex items-center gap-3">
-                    <button
-                      onClick={addMotorBlock}
-                      className="bg-black text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center"
-                      title="Add Motor Block"
-                    >
-                      <PlusIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={removeMotorBlock}
-                      className="bg-white text-red-600 p-2 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center border border-red-100"
-                      title="Remove last block"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
-        </div>
-      </main>
+      </main >
       <div>
         <img
           src="/images/design_img.png"
@@ -753,6 +795,6 @@ export default function DashboardPage() {
           className="w-25 h-23 object-cover object-top mt-auto"
         />
       </div>
-    </div>
+    </div >
   );
 }

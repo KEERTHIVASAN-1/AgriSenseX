@@ -108,7 +108,8 @@ export default function MotorsPage() {
 
   const toggleMotor = (name: string, index: number) => {
     setMotors((p) => {
-      const updated = { ...p, [name]: { ...p[name], isOn: !p[name].isOn } };
+      const currentMotor = p[name] || { isOn: false, onTime: "06:00", offTime: "18:00" };
+      const updated = { ...p, [name]: { ...currentMotor, isOn: !currentMotor.isOn } };
       if (typeof window !== "undefined") {
         localStorage.setItem("motors", JSON.stringify(updated));
       }
@@ -133,7 +134,8 @@ export default function MotorsPage() {
 
   const updateMotorTime = (name: string, field: "onTime" | "offTime", v: string) => {
     setMotors((p) => {
-      const updated = { ...p, [name]: { ...p[name], [field]: v } };
+      const currentMotor = p[name] || { isOn: false, onTime: "06:00", offTime: "18:00" };
+      const updated = { ...p, [name]: { ...currentMotor, [field]: v } };
       // Save to localStorage
       if (typeof window !== "undefined") {
         localStorage.setItem("motors", JSON.stringify(updated));
@@ -334,7 +336,7 @@ export default function MotorsPage() {
   }, [mode, motors]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0] text-gray-900">
+    <div className="flex min-h-screen flex-col bg-linear-to-br from-[#f5f9f0] via-[#e8f5e9] to-[#f0f8f0] text-gray-900">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm">
         <div className="mx-auto max-w-9xl px-4 py-4 sm:px-6 lg:px-8">
@@ -344,7 +346,7 @@ export default function MotorsPage() {
                 onClick={() => router.back()}
                 aria-label="Go back"
                 className="group flex h-10 w-10 items-center justify-center rounded-2xl
-                          bg-gradient-to-br from-[#7faf3b] to-[#6a9331]
+                          bg-linear-to-br from-[#7faf3b] to-[#6a9331]
                           text-white shadow-md ring-1 ring-black/5
                           transition-all hover:shadow-lg hover:-translate-x-0.5 active:scale-95"
               >
@@ -372,10 +374,10 @@ export default function MotorsPage() {
       <div className="mx-auto w-full max-w-9xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
         {/* Mode Toggle */}
         <section className="mb-6">
-          <div className="flex rounded-2xl bg-green-50 p-1">
+          <div className="flex rounded-full bg-green-50 p-1">
             <button
               onClick={setManual}
-              className={`flex-1 rounded-xl py-3 font-bold ${
+              className={`flex-1 rounded-full py-3 font-bold ${
                 mode === "manual"
                   ? "bg-green-700 text-white shadow"
                   : "text-green-700 hover:bg-green-100"
@@ -385,7 +387,7 @@ export default function MotorsPage() {
             </button>
             <button
               onClick={setAuto}
-              className={`flex-1 rounded-xl py-3 font-bold ${
+              className={`flex-1 rounded-full py-3 font-bold ${
                 mode === "auto"
                   ? "bg-green-700 text-white shadow"
                   : "text-green-700 hover:bg-green-100"
@@ -412,9 +414,9 @@ export default function MotorsPage() {
               return (
                 <div
                   key={motor}
-                  className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white to-gray-50 p-6 text-black shadow-lg transition-all hover:shadow-2xl"
+                  className="group relative overflow-hidden rounded-2xl bg-linear-to-br from-white to-gray-50 p-6 text-black shadow-lg transition-all hover:shadow-2xl"
                 >
-                  <div className="flex flex-col items-center gap-4">
+                  <div className="flex flex-col items-center gap-1">
                     {/* View Details Link - Top */}
                     <Link
                       href={`/dashboard/motor-control/motor/motor-${idx + 1}`}
@@ -424,12 +426,12 @@ export default function MotorsPage() {
                     </Link>
 
                     {/* Motor Icon - Green when active, Red when off */}
-                    <div className="flex flex-col items-center gap-3">
+                    <div className="flex flex-col items-center gap-0.5">
                       <div className={`flex h-20 w-20 items-center justify-center 
                         rounded-2xl shadow-md transition-transform group-hover:scale-110 ${
                         motorState.isOn
-                          ? "bg-gradient-to-br from-green-100 to-green-200"
-                          : "bg-gradient-to-br from-red-100 to-red-200"
+                          ? "bg-linear-to-br from-green-100 to-green-200"
+                          : "bg-linear-to-br from-red-100 to-red-200"
                       }`}>
                         <span className="text-4xl">
                           <img 
@@ -439,8 +441,8 @@ export default function MotorsPage() {
                             height={40} 
                             className={`object-contain ${
                               motorState.isOn
-                                ? "opacity-90 brightness-0 saturate-100 hue-rotate-[200deg]"
-                                : "opacity-90 brightness-0 saturate-100 hue-rotate-[0deg]"
+                                ? "opacity-90 brightness-0 saturate-100 hue-rotate-200"
+                                : "opacity-90 brightness-0 saturate-100 hue-rotate-0"
                             }`}
                             style={{
                               filter: motorState.isOn 
@@ -458,8 +460,8 @@ export default function MotorsPage() {
                         onClick={() => toggleMotor(motor, idx)}
                         className={`w-full rounded-xl py-3 text-center text-sm font-bold transition-all shadow-md ${
                           motorState.isOn
-                            ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700"
-                            : "bg-gradient-to-r from-gray-400 to-gray-500 text-white hover:from-gray-500 hover:to-gray-600"
+                            ? "bg-linear-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700"
+                            : "bg-linear-to-r from-gray-400 to-gray-500 text-white hover:from-gray-500 hover:to-gray-600"
                         }`}
                       >
                         {motorState.isOn ? "ON" : "OFF"}
@@ -497,7 +499,7 @@ export default function MotorsPage() {
                       </div>
                     )}
                   </div>
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#7faf3b]/0 to-[#7faf3b]/0 transition-all group-hover:from-[#7faf3b]/5 group-hover:to-[#8ac34a]/5 pointer-events-none"></div>
+                  <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-[#7faf3b]/0 to-[#7faf3b]/0 transition-all group-hover:from-[#7faf3b]/5 group-hover:to-[#8ac34a]/5 pointer-events-none"></div>
                 </div>
               );
             })}
