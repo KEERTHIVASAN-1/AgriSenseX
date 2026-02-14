@@ -10,7 +10,6 @@ export default function FloatingChat() {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -99,7 +98,7 @@ export default function FloatingChat() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 z-50 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#7faf3b] to-[#6a9331] text-white shadow-[0_8px_24px_rgba(127,175,59,0.4)] hover:shadow-[0_12px_32px_rgba(127,175,59,0.6)] hover:scale-110 active:scale-95 transition-all duration-300"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 lg:bottom-8 lg:right-8 z-50 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-linear-to-br from-[#7faf3b] to-[#6a9331] text-white shadow-[0_8px_24px_rgba(127,175,59,0.4)] hover:shadow-[0_12px_32px_rgba(127,175,59,0.6)] hover:scale-110 active:scale-95 transition-all duration-300"
           aria-label="Open chat"
         >
           <svg
@@ -124,7 +123,7 @@ export default function FloatingChat() {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex flex-col bg-white">
           {/* Chat Header */}
-          <div className="flex items-center justify-between p-4 sm:p-6 bg-gradient-to-r from-[#7faf3b] to-[#6a9331] text-white shadow-md">
+          <div className="flex items-center justify-between p-4 sm:p-6 bg-linear-to-r from-[#7faf3b] to-[#6a9331] text-white shadow-md">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/20 flex items-center justify-center">
                 <svg
@@ -168,7 +167,7 @@ export default function FloatingChat() {
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gradient-to-b from-[#f5f9f0] to-white space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-linear-to-b from-[#f5f9f0] to-white space-y-4">
             <div className="max-w-4xl mx-auto w-full">
               {messages.map((message) => (
                 <div
@@ -178,7 +177,7 @@ export default function FloatingChat() {
                   <div
                     className={`max-w-[75%] sm:max-w-[60%] rounded-2xl px-4 py-3 sm:px-5 sm:py-4 ${
                       message.sender === "user"
-                        ? "bg-gradient-to-r from-[#7faf3b] to-[#6a9331] text-white"
+                        ? "bg-linear-to-r from-[#7faf3b] to-[#6a9331] text-white"
                         : "bg-white text-[#2d3436] border border-[#e1e8ed] shadow-sm"
                     }`}
                   >
@@ -382,7 +381,7 @@ export default function FloatingChat() {
                 <textarea
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyPress}
                   placeholder="Type your message..."
                   className="flex-1 text-black min-h-[50px] sm:min-h-[56px] max-h-32 px-4 sm:px-5 py-3 sm:py-4 rounded-xl border border-[#e1e8ed] focus:outline-none focus:ring-2 focus:ring-[#7faf3b]/50 focus:border-[#7faf3b] resize-none text-sm sm:text-base"
                   rows={1}
@@ -390,7 +389,7 @@ export default function FloatingChat() {
                 <button
                   onClick={handleSend}
                   disabled={!inputValue.trim() || isLoading}
-                  className="h-[50px] w-[50px] sm:h-14 sm:w-14 rounded-xl bg-gradient-to-r from-[#7faf3b] to-[#6a9331] text-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
+                  className="h-[50px] w-[50px] sm:h-14 sm:w-14 rounded-xl bg-linear-to-r from-[#7faf3b] to-[#6a9331] text-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
                   aria-label="Send message"
                 >
                   <svg

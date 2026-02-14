@@ -33,7 +33,7 @@ export default function FertigationPage() {
                 onClick={() => router.back()}
                 aria-label="Go back"
                 className="group flex h-10 w-10 items-center justify-center rounded-2xl
-                          bg-gradient-to-br from-[#7faf3b] to-[#6a9331]
+                          bg-linear-to-br from-[#7faf3b] to-[#6a9331]
                           text-white shadow-md ring-1 ring-black/5
                           transition-all hover:shadow-lg hover:-translate-x-0.5 active:scale-95"
               >
@@ -152,7 +152,7 @@ export default function FertigationPage() {
         </Card>
 
         {/* Action Block */}
-        <div className="rounded-2xl border-2 border-green-300 bg-gradient-to-r from-[#eaf3e0] to-[#f3f7ed] p-4 flex items-center justify-between shadow-lg shadow-green-200/50 hover:shadow-xl transition-all duration-300">
+        <div className="rounded-2xl border-2 border-green-300 bg-linear-to-r from-[#eaf3e0] to-[#f3f7ed] p-4 flex items-center justify-between shadow-lg shadow-green-200/50 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center gap-3">
             <img
               src={ICONS8.fertilizer}

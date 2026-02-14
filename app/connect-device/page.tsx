@@ -75,7 +75,7 @@ export default function ConnectDevicePage() {
         </h1>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-[0px_3px_6px_0px_rgba(0,_0,_0,_0.8)] p-8 flex flex-col">
+        <div className="bg-white rounded-2xl shadow-[0px_3px_6px_0px_rgba(0,0,0,0.16)] p-8 flex flex-col">
           <div className="space-y-6 m-6 flex flex-col items-start">
             {/* GSM */}
             <label className="flex items-center gap-3 cursor-pointer">
@@ -109,7 +109,7 @@ export default function ConnectDevicePage() {
                 if (!selectedMode) return;
                 handleOptionClick(selectedMode);
               }}
-              className="w-40 bg-[#B3F296] hover:bg-[#8cc86c] text-gray-800 font-semibold px-0 py-2 rounded-full shadow-[0px_3px_6px_0px_rgba(0,_0,_0,_0.8)] transition"
+              className="w-40 bg-[#B3F296] hover:bg-[#8cc86c] text-gray-800 font-semibold px-0 py-2 rounded-full shadow-[0px_3px_6px_0px_rgba(0,0,0,0.8)] transition"
             >
               Continue
             </button>
