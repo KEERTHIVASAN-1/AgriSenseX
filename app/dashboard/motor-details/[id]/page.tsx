@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { PencilIcon, PlusIcon, ArrowLeftIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { subscribeToTopic, publishMessage } from "../../../../lib/mqttClient";
@@ -28,7 +28,7 @@ const MOTOR_TOPICS: Record<number, { control: string; status: string }> = {
 const MOTOR_ICON_SRC =
   "https://res.cloudinary.com/dbyxgnjkw/image/upload/v1767021968/icons8-motor-50_ooixaf.png";
 
-export default function MotorDetailPage() {
+function MotorDetailContent() {
   const router = useRouter();
   const params = useParams();
   const motorId = typeof params?.id === 'string' ? params.id : '';
@@ -796,5 +796,13 @@ export default function MotorDetailPage() {
         />
       </div>
     </div >
+  );
+}
+
+export default function MotorDetailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#eefae6]">Loading Motor Details...</div>}>
+      <MotorDetailContent />
+    </Suspense>
   );
 }
