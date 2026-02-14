@@ -27,7 +27,7 @@ export default function ModeStatus() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200">
       <div className="flex items-center gap-1.5">
         {modeStatus.toUpperCase().includes("WIFI") ? (
           <svg

@@ -221,7 +221,7 @@ export default function DroneMonitoringPage() {
                 </g>
                 
                 {/* Propellers - realistic with glow and depth */}
-                <g className="group-hover/drone:[animation:spin_0.1s_linear_infinite]">
+                <g className="group-hover/drone:animate-[spin_0.1s_linear_infinite]">
                   {/* Propeller shadows */}
                   <ellipse cx="12" cy="72" rx="11" ry="4" fill="#000000" opacity="0.2" />
                   <ellipse cx="128" cy="72" rx="11" ry="4" fill="#000000" opacity="0.2" />
@@ -392,7 +392,7 @@ export default function DroneMonitoringPage() {
         {analysisResult && !isAnalyzing && (
           <div className="mt-6 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#7faf3b] to-[#6a9331] px-6 py-4">
+            <div className="bg-linear-to-r from-[#7faf3b] to-[#6a9331] px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
                   <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -406,7 +406,7 @@ export default function DroneMonitoringPage() {
             <div className="p-6 space-y-6">
               {/* Predicted Disease */}
               {analysisResult.predictedDisease && analysisResult.predictedDisease !== "None detected" && (
-                <div className="relative bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl border-2 border-red-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+                <div className="relative bg-linear-to-br from-red-50 to-red-100 p-6 rounded-xl border-2 border-red-200 shadow-md hover:shadow-lg transition-shadow duration-300">
                   <div className="absolute top-4 right-4">
                     <div className="h-12 w-12 rounded-full bg-red-200/50 flex items-center justify-center">
                       <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,7 +439,7 @@ export default function DroneMonitoringPage() {
 
               {/* Possible Causes */}
               {analysisResult.possibleCauses && (
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border-2 border-orange-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+                <div className="bg-linear-to-br from-orange-50 to-amber-50 p-6 rounded-xl border-2 border-orange-200 shadow-md hover:shadow-lg transition-shadow duration-300">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-10 w-10 rounded-full bg-orange-200 flex items-center justify-center">
                       <svg className="h-5 w-5 text-orange-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -452,7 +452,7 @@ export default function DroneMonitoringPage() {
                     <ul className="space-y-3">
                       {analysisResult.possibleCauses.map((cause: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-3 group">
-                          <div className="mt-1.5 flex-shrink-0">
+                          <div className="mt-1.5 shrink-0">
                             <div className="h-6 w-6 rounded-full bg-orange-200 flex items-center justify-center group-hover:bg-orange-300 transition-colors">
                               <div className="h-2 w-2 rounded-full bg-orange-600"></div>
                             </div>
@@ -469,7 +469,7 @@ export default function DroneMonitoringPage() {
 
               {/* Prevention */}
               {analysisResult.prevention && (
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+                <div className="bg-linear-to-br from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-200 shadow-md hover:shadow-lg transition-shadow duration-300">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-10 w-10 rounded-full bg-green-200 flex items-center justify-center">
                       <svg className="h-5 w-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -482,7 +482,7 @@ export default function DroneMonitoringPage() {
                     <ul className="space-y-3">
                       {analysisResult.prevention.map((method: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-3 group">
-                          <div className="mt-1.5 flex-shrink-0">
+                          <div className="mt-1.5 shrink-0">
                             <div className="h-6 w-6 rounded-full bg-green-200 flex items-center justify-center group-hover:bg-green-300 transition-colors">
                               <svg className="h-3 w-3 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
-import { PencilIcon, PlusIcon } from "@heroicons/react/24/solid";
+import { PencilIcon, PlusIcon, ArrowLeftIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { subscribeToTopic, publishMessage } from "../../../../lib/mqttClient";
 
 type PhaseValues = { v: number; i: number; p: number; e: number };
@@ -72,6 +72,8 @@ export default function MotorDetailPage() {
   const [motorModes, setMotorModes] = useState<
     Record<string, "manual" | "auto">
   >({ motor1: "manual", motor2: "manual" });
+  const [editingMotorId, setEditingMotorId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
   const [motors, setMotors] = useState<Record<string, MotorState>>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("motors");
@@ -264,15 +266,17 @@ export default function MotorDetailPage() {
   }, []);
 
   const toggleMotor = (name: string, index: number) => {
-    if (index > 1) return; // only Motor 1 and 2 have MQTT
-    const topic = MOTOR_TOPICS[index]?.control;
-    if (!topic) return;
     setMotors((p) => {
-      const updated = { ...p, [name]: { ...p[name], isOn: !p[name].isOn } };
+      const currentMotor = p[name] || { isOn: false, onTime: "06:00", offTime: "18:00" };
+      const updated = { ...p, [name]: { ...currentMotor, isOn: !currentMotor.isOn } };
       if (typeof window !== "undefined")
         localStorage.setItem("motors", JSON.stringify(updated));
-      const isOn = updated[name].isOn;
-      publishMessage(topic, isOn ? "ON" : "OFF");
+      
+      const topic = MOTOR_TOPICS[index]?.control;
+      if (topic) {
+        const isOn = updated[name].isOn;
+        publishMessage(topic, isOn ? "ON" : "OFF");
+      }
       return updated;
     });
   };
@@ -307,7 +311,8 @@ export default function MotorDetailPage() {
     v: string,
   ) => {
     setMotors((p) => {
-      const updated = { ...p, [name]: { ...p[name], [field]: v } };
+      const currentMotor = p[name] || { isOn: false, onTime: "06:00", offTime: "18:00" };
+      const updated = { ...p, [name]: { ...currentMotor, [field]: v } };
       if (typeof window !== "undefined")
         localStorage.setItem("motors", JSON.stringify(updated));
       return updated;
@@ -340,20 +345,40 @@ export default function MotorDetailPage() {
     }
   };
 
+  const updateMotorName = (id: string, oldName: string, newName: string) => {
+    if (!newName.trim()) return;
+    setMotorList((prev) => {
+      const updated = prev.map((m) => (m.id === id ? { ...m, name: newName } : m));
+      if (typeof window !== "undefined")
+        localStorage.setItem("motorList", JSON.stringify(updated));
+      return updated;
+    });
+    setMotors((prev) => {
+      const updated = { ...prev };
+      if (updated[oldName]) {
+        updated[newName] = updated[oldName];
+        delete updated[oldName];
+      }
+      if (typeof window !== "undefined")
+        localStorage.setItem("motors", JSON.stringify(updated));
+      return updated;
+    });
+    setEditingMotorId(null);
+  };
+
   const addMotor = () => {
     let n = 1;
     while (motorList.some((m) => m.name === `Motor ${n}`)) {
       n++;
     }
     const newName = `Motor ${n}`;
-    const newId = `motor_custom_${Date.now()}`;
+    const newId = `motor${Date.now()}`;
+    const newMotor = { id: newId, name: newName };
+    const updatedList = [...motorList, newMotor];
+    setMotorList(updatedList);
+    if (typeof window !== "undefined")
+      localStorage.setItem("motorList", JSON.stringify(updatedList));
 
-    setMotorList((prev) => {
-      const updated = [...prev, { id: newId, name: newName }];
-      if (typeof window !== "undefined")
-        localStorage.setItem("motorList", JSON.stringify(updated));
-      return updated;
-    });
     setMotors((prev) => {
       const updated = {
         ...prev,
@@ -363,25 +388,23 @@ export default function MotorDetailPage() {
         localStorage.setItem("motors", JSON.stringify(updated));
       return updated;
     });
+
     setMotorModes((prev) => ({ ...prev, [newId]: "manual" }));
   };
 
-  const deleteMotor = (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete ${name}?`)) {
-      setMotorList((prev) => {
-        const updated = prev.filter((m) => m.id !== id);
-        if (typeof window !== "undefined")
-          localStorage.setItem("motorList", JSON.stringify(updated));
-        return updated;
-      });
-      setMotors((prev) => {
-        const updated = { ...prev };
-        delete updated[name];
-        if (typeof window !== "undefined")
-          localStorage.setItem("motors", JSON.stringify(updated));
-        return updated;
-      });
-    }
+  const removeMotor = (id: string, name: string) => {
+    const updatedList = motorList.filter((m) => m.id !== id);
+    setMotorList(updatedList);
+    if (typeof window !== "undefined")
+      localStorage.setItem("motorList", JSON.stringify(updatedList));
+
+    setMotors((prev) => {
+      const updated = { ...prev };
+      delete updated[name];
+      if (typeof window !== "undefined")
+        localStorage.setItem("motors", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   useEffect(() => {
@@ -435,7 +458,22 @@ export default function MotorDetailPage() {
       style={{ backgroundColor: "#eefae6" }}
     >
       {/* Top weather banner - desktop: centered content */}
-      <header className="w-full shadow-[0px_9px_3px_-4px_rgba(0,_0,_0,_0.35)]">
+      <header className="sticky top-0 z-50 bg-white shadow-sm px-4 py-3 flex items-center gap-4">
+        <button 
+          onClick={() => router.push('/dashboard')}
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
+        </button>
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-[#90cd72] rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xl">A</span>
+          </div>
+          <span className="font-bold text-xl text-gray-800">AgriSenseX</span>
+        </Link>
+      </header>
+
+      <header className="w-full shadow-[0px_9px_3px_-4px_rgba(0,0,0,0.35)]">
         <Link
           href="/dashboard/weather-details"
           className="block relative h-40 sm:h-48 lg:h-52 w-full overflow-hidden rounded-none shadow-md mb-0 cursor-pointer hover:opacity-95 transition-opacity"
@@ -502,7 +540,7 @@ export default function MotorDetailPage() {
       <main className="flex-1 px-4 sm:px-6 lg:px-10 xl:px-12 pt-6 pb-8 sm:pt-8 sm:pb-12 lg:pt-10 lg:pb-16 ">
         <div className="max-w-5xl lg:max-w-6xl mx-auto ">
           {/* Phase Monitoring - desktop: card layout like reference */}
-          <section className="mb-8 rounded-2xl p-5 sm:p-6 lg:p-8 bg-[#dcffcb]/60 border border-[#b8d4a0] shadow-[4px_4px_10px_0px_rgba(0,_0,_0,_0.8)]">
+          <section className="mb-8 rounded-2xl p-5 sm:p-6 lg:p-8 bg-[#dcffcb]/60 border border-[#b8d4a0] shadow-[4px_4px_10px_0px_rgba(0,0,0,0.8)]">
             <h1 className="text-center text-xl sm:text-lg font-extrabold text-shadow-lg uppercase tracking-wider text-[#2d3436] mb-1">
               Phase Monitoring
             </h1>
@@ -525,7 +563,7 @@ export default function MotorDetailPage() {
                 </div>
               ))}
             </div>
-            <div className="rounded-3xl p-4 border border-[#dcffcb] shadow-[0px_0px_9px_-3px_rgba(0,_0,_0,_0.2)] flex items-center justify-between gap-4">
+            <div className="rounded-3xl p-4 border border-[#dcffcb] shadow-[0px_0px_9px_-3px_rgba(0,0,0,0.2)] flex items-center justify-between gap-4">
               <div>
                 <label className="text-sm font-semibold text-[#4f8820] block mb-1">
                   Voltage & Current Threshold:
@@ -565,15 +603,14 @@ export default function MotorDetailPage() {
                 offTime: "18:00",
               };
               const mode = motorModes[motor.id] ?? "manual";
-              const hasMqtt = idx < 2;
 
               return (
                 <div
                   key={motor.id}
-                  className="rounded-2xl border border-[#b8d4a0] bg-[#e8f5e0]/50 shadow-[0px_8px_13px_-5px_rgba(0,_0,_0,_0.35)] overflow-hidden p-4"
+                  className="rounded-2xl border border-[#b8d4a0] bg-[#e8f5e0]/50 shadow-[0px_8px_13px_-5px_rgba(0,0,0,0.35)] overflow-hidden p-4"
                 >
                   {/* Header: Name + Edit + Toggle */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-0.5">
 
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl text-white overflow-hidden">
@@ -584,10 +621,42 @@ export default function MotorDetailPage() {
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-[#2d3436]">
-                          {motor.name}
-                        </span>
-                        <PencilIcon className="w-4 h-4 text-gray-500 cursor-pointer" />
+                        {editingMotorId === motor.id ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="text"
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              className="text-xl font-bold text-[#2d3436] bg-white border border-[#90cd72] rounded px-1 py-0.5 outline-none w-32"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => updateMotorName(motor.id, motor.name, editingName)}
+                              className="p-1 bg-[#90cd72] text-white rounded hover:bg-[#7faf3b]"
+                            >
+                              <CheckIcon className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => setEditingMotorId(null)}
+                              className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+                            >
+                              <XMarkIcon className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="text-xl font-bold text-[#2d3436]">
+                              {motor.name}
+                            </span>
+                            <PencilIcon 
+                              className="w-4 h-4 text-gray-500 cursor-pointer hover:text-[#90cd72]" 
+                              onClick={() => {
+                                setEditingName(motor.name);
+                                setEditingMotorId(motor.id);
+                              }}
+                            />
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -595,7 +664,7 @@ export default function MotorDetailPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (hasMqtt) toggleMotor(motor.name, idx);
+                          toggleMotor(motor.name, idx);
                         }}
                         className={`relative w-14 h-8 rounded-full transition-colors ${motorState.isOn ? "bg-[#5e970e]" : "bg-gray-400"}`}
                       >
@@ -608,7 +677,7 @@ export default function MotorDetailPage() {
                   </div>
 
                   {/* Manual / Auto Tabs */}
-                  <div className="flex rounded-full bg-[#dcecd4] p-1 mb-6 max-w-md mx-auto">
+                  <div className="flex rounded-full bg-[#dcecd4] p-1 mb-1.5 max-w-md mx-auto">
                     <button
                       onClick={() => setMotorMode(motor.id, "manual")}
                       className={`flex-1 rounded-full py-2 text-sm font-bold transition-all ${mode === "manual" ? "bg-[#90cd72] text-black shadow-md border border-[#7faf3b]" : "text-[#5c6b54] hover:bg-[#c9e0bd]"}`}
@@ -632,7 +701,7 @@ export default function MotorDetailPage() {
                       return (
                         <div
                           key={v}
-                          className="rounded-xl bg-[#f3fae8] border border-[#b8d4a0] p-4 flex flex-col items-center gap-3 shadow-[4px_7px_3px_-3px_rgba(0,_0,_0,_0.35)] relative"
+                          className="rounded-xl bg-[#f3fae8] border border-[#b8d4a0] p-2 flex flex-col items-center gap-0 shadow-[4px_7px_3px_-3px_rgba(0,0,0,0.35)] relative"
                         >
                           {mode === "manual" ? (
                             <>
@@ -659,36 +728,40 @@ export default function MotorDetailPage() {
                           ) : (
                             // AUTO MODE for Valve
                             <>
-                              <div className="flex flex-col items-center gap-1 mb-1">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl text-white">
+                              <div className="flex flex-col items-center gap-0 mb-0">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-xl text-white">
                                   <img
                                     src="/images/valve_icon.png"
                                     alt="Valve"
-                                    className="w-8 h-8"
+                                    className="w-6 h-6"
                                   />
                                 </div>
-                                <span className="text-xs font-bold text-[#2d3436]">
+                                <span className="text-[10px] font-bold text-[#2d3436]">
                                   {v}
                                 </span>
                               </div>
 
-                              <div className="w-full flex items-center justify-between gap-2">
-                                <div className="flex flex-col gap-1 w-full">
-                                  <label className="text-[10px] font-bold text-[#4f8820]">Start Time</label>
+                              <div className="w-full flex items-center justify-between gap-1">
+                                <div className="flex flex-col gap-0 w-full">
+                                  <label className="text-[9px] font-bold text-[#4f8820]">Start Time</label>
                                   <input
                                     type="time"
                                     value={motorState.onTime}
                                     onChange={(e) => updateMotorTime(motor.name, "onTime", e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-1 py-1 text-[10px] text-center bg-white shadow-sm"
+                                    className="w-full rounded-md border border-gray-300 px-0.5 py-0.5 text-[9px] text-center bg-white shadow-sm"
                                   />
                                 </div>
-                                <div className="flex flex-col gap-1 w-full">
-                                  <label className="text-[10px] font-bold text-[#4f8820]">End Time</label>
+
+                                {/* Vertical Divider */}
+                                <div className="w-px h-8 bg-black mt-3 self-center" />
+
+                                <div className="flex flex-col gap-0 w-full">
+                                  <label className="text-[9px] font-bold text-[#4f8820]">End Time</label>
                                   <input
                                     type="time"
                                     value={motorState.offTime}
                                     onChange={(e) => updateMotorTime(motor.name, "offTime", e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-1 py-1 text-[10px] text-center bg-white shadow-sm"
+                                    className="w-full rounded-md border border-gray-300 px-0.5 py-0.5 text-[9px] text-center bg-white shadow-sm"
                                   />
                                 </div>
                               </div>
@@ -698,7 +771,7 @@ export default function MotorDetailPage() {
                                   e.stopPropagation();
                                   saveAuto(motor.name, idx);
                                 }}
-                                className="mt-2 w-full rounded-full py-1.5 bg-[#557b44] hover:bg-[#466638] text-white text-[10px] font-bold shadow-md transition-colors"
+                                className="mt-1 w-[60px] rounded-full py-1 bg-[#557b44] hover:bg-[#466638] text-white text-[9px] font-bold shadow-md transition-colors mx-auto"
                               >
                                 SAVE
                               </button>
@@ -712,17 +785,6 @@ export default function MotorDetailPage() {
               );
             })()}
           </section>
-
-          {/* Add Button - keeping it just in case, or removing if not needed in detail view. Image 2 has a + button in bottom right. */}
-          <div className="fixed bottom-6 right-6 z-50">
-            <button
-              onClick={addMotor}
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-lg hover:scale-110 transition-transform"
-            >
-              <PlusIcon className="w-8 h-8" />
-            </button>
-          </div>
-
 
         </div>
       </main >
